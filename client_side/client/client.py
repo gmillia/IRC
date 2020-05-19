@@ -11,6 +11,7 @@ class Client():
 		self._host = '127.0.0.1'
 		self._port = 4444
 		self._current_user = None
+		self._current_room = None
 		self._connected = False
 
 	##############################################################################################
@@ -23,10 +24,12 @@ class Client():
 			_Option("Disconnect from a server.", self.disconnect_from_server),
 			_Option("Create new user.", self.new_user_menu),
 			_Option("Login to existing account.", self.login_menu),
-			_Option("Create new room.", self.new_room_menu),
+			_Option("Create new room.", self.create_new_room_menu),
 			_Option("List all rooms.", self.list_all_rooms_menu),
 			_Option("Join new room.", self.join_new_room_menu),
 			_Option("Leave room.", self.leave_room),
+			_Option("Send message to room: ", self.send_room_message),
+			_Option("View room messages.", self.view_room_messages),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -43,7 +46,7 @@ class Client():
 			elif self._current_user == None: 
 				msg = " ".join([str(title), "Please login or create user first:"])
 			else:
-				msg = " ".join([str(title), self._current_user + " choose what you'd like to do:"])
+				msg = " ".join([str(title), "[User: " + self._current_user + " | Room: " + self._current_room + "] choose what you'd like to do:"])
 
 			print()
 			print(msg)
@@ -176,21 +179,25 @@ class Client():
 			print("Please connect to a server first!")
 			return
 
+		if self._current_user != None:
+			print("Already logged in!")
+			return
+
 		username = input("Enter user username: ")
 		password = input("Enter user password: ")
 
 		response = self.send_request_to_server(2, [username, password])
 
 		if response == None: return
-		else: response = int(response)
 
-		if response == 1:
+		if response == "invalid":
+			print("Username or password is invalid!")
+		else:
 			print("Successfuly logged in to " + username)
 			self._current_user = username
-		elif response == 0:
-			print("Username or password is invalid!")
+			self._current_room = response
 
-	def new_room_menu(self):
+	def create_new_room_menu(self):
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
@@ -208,10 +215,14 @@ class Client():
 
 		if response == 1:
 			print("Successfuly created new room " + room_name)
+			self._current_room = room_name
 		elif response == 0:
 			print("Room " + room_name + " already exists!")
 
 	def list_all_rooms_menu(self):
+		"""
+		Response is a list
+		"""
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
@@ -220,14 +231,19 @@ class Client():
 			print("Please create user or login first!")
 			return 
 
-		response = self.send_request_to_server(4)
-		if response != None:
-			if len(response) == 0:
-				print("Server doesn't have any rooms, add rooms first!")
-			else:
-				print("#", "Room name")
-				for i in range(len(response)):
-					print(i + 1, response[i])
+		response = self.send_request_to_server(4, [self._current_user, self._current_room])
+
+		if response == None: return
+
+		if len(response) == 1:
+			print("Login or create user first!")
+			return
+
+		self._current_room = response[0]
+
+		print("#", "Room name")
+		for i in range(len(response[1])):
+			print(i + 1, response[1][i])
 
 	def join_new_room_menu(self):
 		if self._connected == False:
@@ -248,8 +264,10 @@ class Client():
 			print("Room " + room_name + " doesn't exist. Create first!")
 		elif response == 1:
 			print("You already participate in the room " + room_name + "!")
+			self._current_room = room_name
 		elif response == 2:
-			print("Successfuly created new room " + room_name)
+			print("Successfuly joined new room " + room_name)
+			self._current_room = room_name
 
 	def leave_room(self):
 		if self._connected == False:
@@ -260,18 +278,86 @@ class Client():
 			print("Please create user or login first!")
 			return 
 
-		room_name = input("Please enter name of the room to leave: ")
-		response = self.send_request_to_server(6, [room_name, self._current_user])
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		response = self.send_request_to_server(6, [self._current_room, self._current_user])
 
 		if response == None: return
 		else: response = int(response)
 
 		if response == 0:
-			print("Room " + room_name + " doesn't exist. Create first!")
+			print("Room " + self._current_room + " doesn't exist. Create first!")
 		elif response == 1:
 			print("You can't leave room that you haven't joined. Join first!")
 		elif response == 2:
-			print("Successfuly left " + room_name)
+			print("Successfuly left " + self._current_room)
+			self._current_room = None
+
+	def send_room_message(self):
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		message = input("Please enter message: ")
+
+		response = self.send_request_to_server(7, [self._current_user, self._current_room, message])
+
+		if response == None: return
+		else: response = int(response)
+
+		if response == 0:
+			print("Can't send message: room doesn't exist. Create or join first.")
+			return
+		elif (response == 1 or response == 2):
+			print("Can't send message: join the room first.")
+			return
+		else:
+			print("Succesfully sent message.")
+
+	def view_room_messages(self):
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+			
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		response = self.send_request_to_server(8, [self._current_user, self._current_room])
+
+		if response == None: return
+
+		print(type(response))
+		"""
+		if response == 0:
+			print("Can't send message: room doesn't exist. Create or join first.")
+			return
+		elif (response == 1 or response == 2):
+			print("Can't send message: join the room first.")
+			return
+		"""
+		if len(response) == 0:
+			print("No messages in the room. Send first.")
+			return
+	
+		print("Time", "From", "Message")
+		for i in range(len(response)):
+			print(response[i]["At"], response[i]["From"], response[i]["Message"])
+
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
