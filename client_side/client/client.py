@@ -91,7 +91,13 @@ class Client():
 	##############################################################################################
 
 	def attempt_connect_to_server(self):
+		"""
+		Helper function that helps connect to a server
+		"""
+
+		#If connection was valid
 		if(self._client_socket != None):
+			#Check if connection still exists by sending quick request
 			try:
 				response = self.send_request_to_server(666)
 				if not response:
@@ -105,6 +111,10 @@ class Client():
 			self.connect_to_server()
 
 	def connect_to_server(self):
+		"""
+		Function that actually connects to a server
+		"""
+
 		self._client_socket = socket.socket()
 		print("Connecting")
 		try:
@@ -114,6 +124,7 @@ class Client():
 			print("Couldn't connect to a server: start the server first!")
 			return
 
+		#Connected
 		self._connected = True
 		data = self._client_socket.recv(2048)
 		response = data.decode('utf-8')
@@ -265,136 +276,228 @@ class Client():
 	def create_new_room_menu(self):
 		"""
 		Function that creates new room on the system
+		Serer responds with a list consisting of just 1 item:
+		0 signifies server error
+		1 signifies successful creation of new room
 		"""
+
+		#Check if connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check if logged in
 		if self._current_user == None:
 			print("Please create user or login first!")
 			return 
 
+		#Prompt user to input name of the room to create
 		room_name = input("Enter new room name: ")
 
+		#Validate user input
 		if len(room_name) == 0:
-			print("Invalid input - please try again!")
+			print("Invalid input, please try again!")
 			return
 
+		#Send request to server to create new room
 		response = self.send_request_to_server(3, [room_name, self._current_user])
 
+		#Check errored request
 		if response == None: return
-		else: response = int(response[0])
+		
+		#Transform first item on the response list to an integer
+		response = int(response[0])
 
-		if response == 1:
-			print("Successfuly created new room " + room_name)
-			self._current_room = room_name
-		elif response == 0:
+		#Check server error
+		if response == 0:
 			print("Room " + room_name + " already exists!")
+			return
+
+		#All checks passed: new room created on the system: can update local info
+		print("Successfuly created new room " + room_name)
+		self._current_room = room_name
 
 	def list_all_rooms_menu(self):
 		"""
-		Response is a list with 2 items
+		Function that lists all rooms on the system
+		Server responds with a list consisting either of 1 or 2 items:
+		When server returns a list with just 1 item, it means there was an error on the server side with the request 
+		When server returns a list with 2 items, it means successful request:
+		item 1 = last_room used by the user (this is returned in case user logs in and first thing checks all rooms)
+		item 2 = all rooms on the system
 		"""
+
+		#Check that client is connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check that client is logged in
 		if self._current_user == None:
 			print("Please create user or login first!")
 			return 
 
+		#Send a request to a server to fetch all room names
 		response = self.send_request_to_server(4, [self._current_user, self._current_room])
 
+		#Check for errored request
 		if response == None: return
 
+		#Check if server returned list with 1 item: signifies some error
 		if len(response) == 1:
 			print("Login or create user first!")
 			return
 
+		#All checks passed: update current room
 		self._current_room = response[0]
 
+		#Check if system doesn't have any rooms
 		if len(response[1]) == 0:
 			print("No rooms: create first!")
 			return
 
+		#Print all rooms
 		print("#", "Room name")
 		for i in range(len(response[1])):
 			print(i + 1, response[1][i])
 
 	def join_new_room_menu(self):
+		"""
+		Function that lets user join new room and qutomatically switches user current room to this newly joined room
+		Server responds with a list consisting of 1 item:
+		0 signifies room non-existance
+		1 signifies that user is already a participant of that particular room
+		2 signifies successful join
+		"""
+
+		#Check if cleint is connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check of client is logged in
 		if self._current_user == None:
 			print("Please create user or login first!")
 			return 
 
+		#Prompt user to enter name of the new room they want to join
 		room_name = input("Please enter name of the room to join: ")
+
+		#Validate used input
+		if len(room_name) == 0:
+			print("Invalid input, please try again!")
+			return 
+
+		#Send request to server to join new room
 		response = self.send_request_to_server(5, [room_name, self._current_user])
 
+		#Check errored request
 		if response == None: return
-		else: response = int(response[0])
 
-		if response == 0:
-			print("Room " + room_name + " doesn't exist. Create first!")
-		elif response == 1:
-			print("You already participate in the room " + room_name + "!")
-			self._current_room = room_name
-		elif response == 2:
-			print("Successfuly joined new room " + room_name)
-			self._current_room = room_name
-
-	def leave_room(self):
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-
-		if self._current_room == None:
-			print("Please join or create room first.")
-			return
-
-		response = self.send_request_to_server(6, [self._current_room, self._current_user])
-
-		if response == None: return
-		else: response = int(response[0])
-
-		if response == 0:
-			print("Room " + self._current_room + " doesn't exist. Create first!")
-		elif response == 1:
-			print("You can't leave room that you haven't joined. Join first!")
-		elif response == 2:
-			print("Successfuly left " + self._current_room)
-			self._current_room = None
-
-	def switch_room(self):
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-
-		if self._current_room == None:
-			print("Please join or create room first.")
-			return
-
-		new_room = print("Please enter room to go to: ")
-
-		if len(new_room) == 0:
-			print("Invalid input. Try again!")
-			return
-
-		response = self.send_request_to_server(7, [self._current_user, new_room])
-
-		if response == None: return
+		#Transofmr first item on server reponse to an integer
 		response = int(response[0])
 
+		#Check for server errors
+		if response == 0:
+			print("Room " + room_name + " doesn't exist. Create first!")
+			return
+		if response == 1:
+			print("You already participate in the room " + room_name + "!")
+			self._current_room = room_name
+			return
+
+		#All checks passed: user joined new room: can update local info
+		print("Successfuly joined new room " + room_name)
+		self._current_room = room_name
+
+	def leave_room(self):
+		"""
+		Function that lets user leave current room
+		Server response consists of a list with 1 item:
+		0 signifies non-existent room (room user tries to leave doesn't exist on the system)
+		1 signifies user isn't a participant of a room they're trying to leave
+		2 signifies successful leaving
+		"""
+
+		#Check that client is connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Check that client is logged in
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		#Check that client is in the room currently (room to be left)
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		#Send a request to a server for user to leave current room
+		response = self.send_request_to_server(6, [self._current_room, self._current_user])
+
+		#Check errored request
+		if response == None: return
+
+		#Transform first item from server response to an integer
+		response = int(response[0])
+
+		#Check for sever errors
+		if response == 0:
+			print("Room " + self._current_room + " doesn't exist. Create first!")
+			return
+
+		if response == 1:
+			print("You can't leave room that you haven't joined. Join first!")
+			return
+
+		#All checks passed: user successfuly left room: can update local info
+		print("Successfuly left " + self._current_room)
+		self._current_room = None
+
+	def switch_room(self):
+		"""
+		Function that lets user switch to a new room that he is a participant of
+		Server response is a list that consists of one item:
+		0 signifies that user doesn't exist
+		1 signifies that room user tries to swtich to doesn't exist
+		2 signifies successful switch
+		"""
+
+		#Check that client is connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Check that client is logged in
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		#Check that client is a participant of a room
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		#Promt user to input name of the room they want to switch to
+		new_room = print("Please enter room to go to: ")
+
+		#Validate user input
+		if len(new_room) == 0:
+			print("Invalid input, please try again!")
+			return
+
+		#Send request to a server to switch current room
+		response = self.send_request_to_server(7, [self._current_user, new_room])
+
+		#Check for errorred request
+		if response == None: return
+
+		#Transform first item on response to be an integer
+		response = int(response[0])
+
+		#Check for server errors
 		if response == 0:
 			print("User doesn't exist.")
 			return
@@ -403,67 +506,111 @@ class Client():
 			print("Room " + new_room + " doesn't exist - create first!")
 			return
 
+		#All checks passed: room successfuly switched: can update local info
 		print("Successfuly switched room to " + new_room)
 		self._current_room = new_room
 
 	def send_room_message(self):
+		"""
+		Function that lets user send message to a room he is currently in
+		Server response is a list that consists of one item:
+		0 signifies that system doesn't have user that tries to send the message (need to create user first)
+		1 signifies that system doesn't have a room that user wants to send message to
+		2 signifies that user doesn't participate in a room he wants to send message to
+		3 signifies successful message sent
+		"""
+
+		#Check that client is connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check that client is logged in
 		if self._current_user == None:
 			print("Please create user or login first!")
 			return 
 
+		#Check that user is in a room
 		if self._current_room == None:
 			print("Please join or create room first.")
 			return
 
+		#Prompt user to input a message to be sent to a room
 		message = input("Please enter message: ")
 
+		#Validate user input
+		if len(message) == 0:
+			print("Invalid input, please try again!")
+			return 
+
+		#Send request to server to send a message to a room
 		response = self.send_request_to_server(8, [self._current_user, self._current_room, message])
 
+		#Check errorred request
 		if response == None: return
-		else: response = int(response[0])
+		
+		#Transform first item on the server reponse list to be an integer
+		response = int(response[0])
 
+		#Check for server errors
 		if response == 0:
 			print("Can't send message: room doesn't exist. Create or join first.")
 			return
-		elif (response == 1 or response == 2):
+
+		if (response == 1 or response == 2):
 			print("Can't send message: join the room first.")
 			return
-		else:
-			print("Succesfully sent message.")
+
+		#All checks passed: display message
+		print("Succesfully sent message.")
 
 	def view_room_messages(self):
+		"""
+		Function that gets all the messaged from current user room and displays them to a user
+		Server response is a list that consists of 1 item:
+		0 - system doesn't have a room user tries to fetch messages from
+		1 - user is not found to be a participant of the room
+		2 - room is not found to be in user room list (rooms that user is a participant of)
+		list of messages - self-explanatory
+		"""
+
+		#Check that client is connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check that user is logged in
 		if self._current_user == None:
 			print("Please create user or login first!")
 			return 
-			
+		
+		#Check that user is a room participant
 		if self._current_room == None:
 			print("Please join or create room first.")
 			return
 
+		#Send request to server to fetch all messaged from current room
 		response = self.send_request_to_server(9, [self._current_user, self._current_room])
 
+		#Check errorred request
 		if response == None: return
 
+		#Check server errors: On successful message fetch server can send empty list (no messages in the room): check for that
 		if len(response) > 0:
 			if type(response[0]) == str and int(response[0]) == 0:
 				print("Can't send message: room doesn't exist. Create or join first.")
 				return
-			elif type(response[0]) == str and (int(response[0]) == 1 or int(response[0]) == 2):
+
+			if type(response[0]) == str and (int(response[0]) == 1 or int(response[0]) == 2):
 				print("Can't send message: join the room first.")
 				return
 
+		#All checks passed: check if room doesn't have any messages
 		if len(response) == 0:
 			print("No messages in the room. Send first.")
 			return
 	
+		#Print all messaged from a room
 		print("**************************************************************")
 		for i in range(len(response)):
 			print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
@@ -475,13 +622,24 @@ class Client():
 	##############################################################################################
 	def send_request_to_server(self, request_code, request_body=None):
 		"""
+		Function that actually communicates with a server and sends response back to the user
 		Response is sent in the form of the list
 		"""
+
+		#Check that connection exists
 		if self._client_socket == None:
 			print("Unable to communicate with the server: Connect to the server first!")
 			return 
 
+		#Check for established connection
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Create request list and transform it into list
 		request = str([request_code, request_body])
+
+		#Attempt server request
 		try:
 			self._client_socket.sendall(request.encode())
 		except socket.timeout:
@@ -491,11 +649,15 @@ class Client():
 			print("Couldn't send request. Closing connection.")
 			self.disconnect_from_server()
 
+		#Receive server response
 		data = self._client_socket.recv(2048)
+
+		#Check for valid server response
 		if (not data) or data == b'':
 			print("Didn't receive response from the server: disconnecting.")
 			self.disconnect_from_server()
 			return
 
+		#All checks passed: decode server response and transform into a list, then send back the list
 		response = eval(data.decode('utf-8'))
 		return response

@@ -166,9 +166,10 @@ class Server():
 
 		#User called and doesn't have last room
 		if current_room == None:
-			return [None, self._room_names]
+			return [self._last_room, self._room_names]
 
 		user = self._find_user(username)
+		user._last_room = current_room
 		return [user._last_room, self._room_names]
 
 	def _join_room(self, room_name, username):
@@ -222,6 +223,9 @@ class Server():
 
 		#Find user
 		user = self._find_user(username)
+
+		if not (room_name in user._room_names):
+			return [2]
 
 		#Update user info and return successful switch
 		user._last_room = room_name
