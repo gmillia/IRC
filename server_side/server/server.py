@@ -274,6 +274,7 @@ class Server():
 			[1] - user with username doesn't exist on the system
 			[2] - room doesn't have user with username as a participant 
 			[3] - user doesn't have room with room_name in rooms that he participates in
+			[4] - user succesfully left room
 
 		"""
 
@@ -295,19 +296,35 @@ class Server():
 		#Find user objet in the system
 		user = self._find_user(username)
 
-		#Check 
+		#Check if user has room_name in his room_names list
+		if not (room_name in user._room_names):
+			return [3]
 
-		#Update room stuff
-		room._users.remove(user)
-		room._usernames.remove(username)
-		#Update user info
-		user._rooms.remove(room)
-		user._room_names.remove(room_name)
+		#All checks passed: can update info to leave
+		room._users.remove(user)				#remove user from rooms user list			
+		room._usernames.remove(username)		#remove username from rooms username list
+		user._rooms.remove(room)				#remove room from user rooms list
+		user._room_names.remove(room_name)		#remove room_name from user room_names list
+
+		#Check if the room user is leaving is the last he was using: if so, change last_room to None
 		if user._last_room == room_name: 
 			user._last_room = None
-		return [2]
+
+		#Successful removal
+		return [4]
 
 	def _switch_room(self, username, room_name):
+		"""
+		Function that lets user swtich from one room to another room
+
+		Args: 
+			username (String) - username of the user that wants to switch rooms
+			room_name (String) - name of the room that user wants to switch to
+
+		Returns: 
+			[0] - 
+		"""
+
 		#Check that user exists on the server
 		if not (username in self._usernames):
 			return [0]
@@ -319,6 +336,7 @@ class Server():
 		#Find user
 		user = self._find_user(username)
 
+		#Check if user participates in the room he wants to switch to
 		if not (room_name in user._room_names):
 			return [2]
 

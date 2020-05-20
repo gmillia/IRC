@@ -414,9 +414,11 @@ class Client():
 		"""
 		Function that lets user leave current room
 		Server response consists of a list with 1 item:
-		0 signifies non-existent room (room user tries to leave doesn't exist on the system)
-		1 signifies user isn't a participant of a room they're trying to leave
-		2 signifies successful leaving
+			[0] - room with room_name doesn't exist on the system
+			[1] - user with username doesn't exist on the system
+			[2] - room doesn't have user with username as a participant 
+			[3] - user doesn't have room with room_name in rooms that he participates in
+			[4] - user succesfully left room
 		"""
 
 		#Check that client is connected to a server
@@ -449,6 +451,9 @@ class Client():
 			return
 
 		if response == 1:
+			print("User " + self._current_user + " doesn't exist. Create first!")
+
+		if response == 2 or response == 3:
 			print("You can't leave room that you haven't joined. Join first!")
 			return
 
