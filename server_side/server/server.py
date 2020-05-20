@@ -62,7 +62,8 @@ class Server():
 
 			#Send response on user request
 			request = eval(data.decode('utf-8'))
-			response = str(self._request_handler(request))
+			#All helper functions return a list as a response
+			response = str(self._request_handler(request, address))
 			try:
 				connection.sendall(response.encode())
 			except OSError:
@@ -70,7 +71,7 @@ class Server():
 
 		connection.close()
 
-	def _request_handler(self, request):
+	def _request_handler(self, request, address):
 		"""
 		request is a list
 		request [0] = act to be performed
@@ -78,33 +79,52 @@ class Server():
 
 		description of the act flags can be founds in docs
 		"""
-		if(request[0] == 1): return self._create_new_user(request[1][0], request[1][1])
-		if(request[0] == 2): return self._attempt_user_login(request[1][0], request[1][1])
-		if(request[0] == 3): return self._create_new_room(request[1][0], request[1][1])
-		if(request[0] == 4): return self._list_all_rooms(request[1][0], request[1][1])
-		if(request[0] == 5): return self._join_room(request[1][0], request[1][1])
-		if(request[0] == 6): return self._leave_room(request[1][0], request[1][1])
-		if(request[0] == 7): return self._send_room_message(request[1][0], request[1][1], request[1][2])
-		if(request[0] == 8): return self._show_room_messges(request[1][0], request[1][1])
-		if(request[0] == 666): return 1
+
+		addr = address[0] + ":" + str(address[1])
+		if(request[0] == 1): 
+			print(addr + " | create_new_user : " + str(request[1]))
+			return self._create_new_user(request[1][0], request[1][1])
+		if(request[0] == 2): 
+			print(addr + " | attepmt_user_login : " + str(request[1]))
+			return self._attempt_user_login(request[1][0], request[1][1])
+		if(request[0] == 3): 
+			print(addr + " | create_new_room : " + str(request[1]))
+			return self._create_new_room(request[1][0], request[1][1])
+		if(request[0] == 4): 
+			print(addr + " | list_all_rooms : " + str(request[1]))
+			return self._list_all_rooms(request[1][0], request[1][1])
+		if(request[0] == 5): 
+			print(addr + " | join_room : " + str(request[1]))
+			return self._join_room(request[1][0], request[1][1])
+		if(request[0] == 6): 
+			print(addr + " | leave_room : " + str(request[1]))
+			return self._leave_room(request[1][0], request[1][1])
+		if(request[0] == 7): 
+			print(addr + " | send_room_message : " + str(request[1]))
+			return self._send_room_message(request[1][0], request[1][1], request[1][2])
+		if(request[0] == 8): 
+			print(addr + " | show_room_messages : " + str(request[1]))
+			return self._show_room_messages(request[1][0], request[1][1])
+		if(request[0] == 666): 
+			return 1
 
 	def _create_new_user(self, username, password):
 		if not (username in self._usernames):
 			new_user = User(username=username, password=password)
 			self._users.append(new_user)
 			self._usernames.append(username)
-			return 1
-		else: return 0
+			return [1]
+		else: return [0]
 
 	def _attempt_user_login(self, username, password):
 		if not(username in self._usernames):
-			return 0
+			return [0]
+
+		user = self._find_user(username)
+		if user._password != password:
+			return [0]
 		else:
-			user = self._find_user(username)
-			if user._password != password:
-				return "invalid"
-			else:
-				return user._last_room
+			return [user._last_room]
 
 	'''
 	def _list_all_users(self):
@@ -127,13 +147,14 @@ class Server():
 		if not (room_name in self._room_names):
 			new_room = Room(name=room_name, owner=owner)
 			user = self._find_user(owner)	#find user object
+			user._room_names.append(room_name)
 			new_room._users.append(user)	#append user to list of user objects in room	
 			new_room._usernames.append(owner)	#append name to list of usernames in room
 			self._rooms.append(new_room)	#append to list of rooms on server
 			self._room_names.append(room_name)	#append to lst of room names on server
 			user._last_room = room_name 	#update last room user interacted with
-			return 1
-		else: return 0
+			return [1]
+		else: return [0]
 
 	def _list_all_rooms(self, username, current_room):
 		#Don't return rooms if username doesn't checkout
@@ -149,13 +170,13 @@ class Server():
 
 	def _join_room(self, room_name, username):
 		if not (room_name in self._room_names):
-			return 0
+			return [0]
 
 		room = self._find_room(room_name)
 
 		#User already joined room
 		if username in room._usernames:
-			return 1
+			return [1]
 		else:
 			user = self._find_user(username)
 			#Update room info
@@ -165,16 +186,16 @@ class Server():
 			user._rooms.append(room)
 			user._room_names.append(room_name)
 			user._last_room = room_name
-			return 2
+			return [2]
 
 	def _leave_room(self, room_name, username):
 		if not (room_name in self._room_names):
-			return 0
+			return [0]
 
 		room = self._find_room(room_name)
 
 		if  not (username in room._usernames):
-			return 1
+			return [1]
 		else:
 			user = self._find_user(username)
 			#Update room stuff
@@ -185,12 +206,12 @@ class Server():
 			user._room_names.remove(room_name)
 			if user._last_room == room_name: 
 				user._last_room = None
-			return 2
+			return [2]
 
 	def _send_room_message(self, username, room_name, message):
 		#Check if such room exists
 		if not (room_name in self._room_names):
-			return 0
+			return [0]
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
@@ -198,19 +219,20 @@ class Server():
 
 		#Check that user is in the room in room side
 		if  not (username in room._usernames):
-			return 1
+			return [1]
 
 		#Check that user in the room in user side
 		if not (room_name in user._room_names):
-			return 2
+			return [2]
 
 		#Passed all checks, can actually send a message
+		user._last_room = room_name
 		time = datetime.datetime.now()
 		final_message = {"At": time, "From": username, "Message": message}
 
 		#Add message to room messages
 		room._messages.append(final_message)
-		return 3
+		return [3]
 
 		#Send message to all room users
 		#Probably not needed - users will fetch messges from current room
@@ -226,13 +248,14 @@ class Server():
 
 		#Check that user is in the room in room side
 		if  not (username in room._usernames):
-			return 1
+			return [1]
 
 		#Check that user in the room in user side
 		if not (room_name in user._room_names):
-			return 2
+			return [2]
 
 		#All checks passed, can send back messages
+		user.last_room = room_name
 		return room._messages
 
 	#Helper functions

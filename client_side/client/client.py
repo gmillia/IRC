@@ -1,4 +1,5 @@
 import socket
+import datetime
 
 class _Option():
 	def __init__(self, msg, func_pointer):
@@ -46,7 +47,7 @@ class Client():
 			elif self._current_user == None: 
 				msg = " ".join([str(title), "Please login or create user first:"])
 			else:
-				msg = " ".join([str(title), "[User: " + self._current_user + " | Room: " + self._current_room + "] choose what you'd like to do:"])
+				msg = " ".join([str(title), "[User: " + self._current_user + " | Room: " + str(self._current_room) + "] choose what you'd like to do:"])
 
 			print()
 			print(msg)
@@ -122,6 +123,7 @@ class Client():
 			self._client_socket = None
 			self._connected = False
 			self._current_user = None
+			self._current_room = None
 			print("Disconnected from the server.")
 
 	##############################################################################################
@@ -139,7 +141,7 @@ class Client():
 		response = self.send_request_to_server(1, [username, password])
 
 		if response == None: return
-		else: response = int(response)
+		else: response = int(response[0])
 
 		if response == 1:
 			print("Successfuly created new user " + username)
@@ -188,14 +190,16 @@ class Client():
 
 		response = self.send_request_to_server(2, [username, password])
 
+		#None is only returned on error
 		if response == None: return
 
-		if response == "invalid":
+		if type(response[0]) == int and int(response[0]) == 0:
 			print("Username or password is invalid!")
-		else:
-			print("Successfuly logged in to " + username)
-			self._current_user = username
-			self._current_room = response
+			return
+
+		print("Successfuly logged in to " + username)
+		self._current_user = username
+		self._current_room = response[0]
 
 	def create_new_room_menu(self):
 		if self._connected == False:
@@ -211,7 +215,7 @@ class Client():
 		response = self.send_request_to_server(3, [room_name, self._current_user])
 
 		if response == None: return
-		else: response = int(response)
+		else: response = int(response[0])
 
 		if response == 1:
 			print("Successfuly created new room " + room_name)
@@ -221,7 +225,7 @@ class Client():
 
 	def list_all_rooms_menu(self):
 		"""
-		Response is a list
+		Response is a list with 2 items
 		"""
 		if self._connected == False:
 			print("Please connect to a server first!")
@@ -258,7 +262,7 @@ class Client():
 		response = self.send_request_to_server(5, [room_name, self._current_user])
 
 		if response == None: return
-		else: response = int(response)
+		else: response = int(response[0])
 
 		if response == 0:
 			print("Room " + room_name + " doesn't exist. Create first!")
@@ -285,7 +289,7 @@ class Client():
 		response = self.send_request_to_server(6, [self._current_room, self._current_user])
 
 		if response == None: return
-		else: response = int(response)
+		else: response = int(response[0])
 
 		if response == 0:
 			print("Room " + self._current_room + " doesn't exist. Create first!")
@@ -313,7 +317,7 @@ class Client():
 		response = self.send_request_to_server(7, [self._current_user, self._current_room, message])
 
 		if response == None: return
-		else: response = int(response)
+		else: response = int(response[0])
 
 		if response == 0:
 			print("Can't send message: room doesn't exist. Create or join first.")
@@ -341,23 +345,23 @@ class Client():
 
 		if response == None: return
 
-		print(type(response))
-		"""
-		if response == 0:
-			print("Can't send message: room doesn't exist. Create or join first.")
-			return
-		elif (response == 1 or response == 2):
-			print("Can't send message: join the room first.")
-			return
-		"""
+		if len(response) > 0:
+			if type(response[0]) == str and int(response[0]) == 0:
+				print("Can't send message: room doesn't exist. Create or join first.")
+				return
+			elif type(response[0]) == str and (int(response[0]) == 1 or int(response[0]) == 2):
+				print("Can't send message: join the room first.")
+				return
+
 		if len(response) == 0:
 			print("No messages in the room. Send first.")
 			return
 	
-		print("Time", "From", "Message")
+		print("**************************************************************")
 		for i in range(len(response)):
-			print(response[i]["At"], response[i]["From"], response[i]["Message"])
+			print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
 
+		print("**************************************************************")
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
@@ -368,7 +372,7 @@ class Client():
 		"""
 		if self._client_socket == None:
 			print("Unable to communicate with the server: Connect to the server first!")
-			return None
+			return 
 
 		request = str([request_code, request_body])
 		try:
