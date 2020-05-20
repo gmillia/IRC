@@ -25,10 +25,12 @@ class Client():
 			_Option("Disconnect from a server.", self.disconnect_from_server),
 			_Option("Create new user.", self.new_user_menu),
 			_Option("Login to existing account.", self.login_menu),
+			_Option("Logout", self.logout_menu),
 			_Option("Create new room.", self.create_new_room_menu),
 			_Option("List all rooms.", self.list_all_rooms_menu),
 			_Option("Join new room.", self.join_new_room_menu),
 			_Option("Leave room.", self.leave_room),
+			_Option("Switch room", self.switch_room),
 			_Option("Send message to room: ", self.send_room_message),
 			_Option("View room messages.", self.view_room_messages),
 			_Option("Exit.", lambda: "Exit")
@@ -131,23 +133,43 @@ class Client():
 	##############################################################################################
 
 	def new_user_menu(self):
+		"""
+		Function that creates a new user in the system.
+		Server response is an array that consists of one item: integer
+		0 signifies error from server
+		1 signifies successful creation of the user
+		"""
+		#Check that client is connected
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Prompt user for input
 		username = input("Enter new user username: ")
 		password = input("Enter new user password: ")
 
+		#Validate input
+		if len(username) == 0 or len(password) == 0:
+			print("Invalid input, please try again!")
+			return
+
+		#Send request to the server to create new user on the system
 		response = self.send_request_to_server(1, [username, password])
 
+		#Validate not errored response on request
 		if response == None: return
-		else: response = int(response[0])
+		
+		#Transform first item from response to integer
+		response = int(response[0])
 
-		if response == 1:
-			print("Successfuly created new user " + username)
-			self._current_user = username
-		elif response == 0:
+		#Check for error from server
+		if response == 0:
 			print("User " + username + " already exists!")
+			return
+
+		#All checks passed: user created on the system: can update local info
+		print("Successfuly created new user " + username)
+		self._current_user = username
 
 	'''
 	def list_all_users_menu(self):
@@ -177,31 +199,73 @@ class Client():
 	'''
 
 	def login_menu(self):
+		"""
+		Function that logs user in (matches user with user on the system)
+		Server response is a list:
+		0 signigies some error on login
+		On success server returns last_room used by the user (can be valid room or None)
+		"""
+
+		#Check if connected to a server first
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
 
+		#Check if not already logged in
 		if self._current_user != None:
-			print("Already logged in!")
+			print("Already logged in, logout first!")
 			return
 
+		#Prompt user to input login info
 		username = input("Enter user username: ")
 		password = input("Enter user password: ")
 
+		#Validate user input
+		if len(username) == 0 or len(password) == 0:
+			print("Invalid input, please try again!")
+			return
+
+		#Send request to server to log user in
 		response = self.send_request_to_server(2, [username, password])
 
-		#None is only returned on error
+		#Validate not errored response on request
 		if response == None: return
 
+		#Check errors on login
 		if type(response[0]) == int and int(response[0]) == 0:
 			print("Username or password is invalid!")
 			return
 
+		#All checks have passed: user logged in: can update local info
 		print("Successfuly logged in to " + username)
 		self._current_user = username
 		self._current_room = response[0]
 
+	def logout_menu(self):
+		"""
+		Function that doesn't communicate with server:
+		Checks for connection and current user existance, and clears local info, thus "logging out"
+		"""
+		#Check if not connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Check if logged in
+		if self._current_user == None:
+			print("Login first!")
+			return
+
+		#All checks passed: can log user out: clear local info
+		self._current_user = None
+		self._current_room = None
+
+		print("Successfuly logged out.")
+
 	def create_new_room_menu(self):
+		"""
+		Function that creates new room on the system
+		"""
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
@@ -211,6 +275,10 @@ class Client():
 			return 
 
 		room_name = input("Enter new room name: ")
+
+		if len(room_name) == 0:
+			print("Invalid input - please try again!")
+			return
 
 		response = self.send_request_to_server(3, [room_name, self._current_user])
 
@@ -244,6 +312,10 @@ class Client():
 			return
 
 		self._current_room = response[0]
+
+		if len(response[1]) == 0:
+			print("No rooms: create first!")
+			return
 
 		print("#", "Room name")
 		for i in range(len(response[1])):
@@ -299,6 +371,41 @@ class Client():
 			print("Successfuly left " + self._current_room)
 			self._current_room = None
 
+	def switch_room(self):
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		new_room = print("Please enter room to go to: ")
+
+		if len(new_room) == 0:
+			print("Invalid input. Try again!")
+			return
+
+		response = self.send_request_to_server(7, [self._current_user, new_room])
+
+		if response == None: return
+		response = int(response[0])
+
+		if response == 0:
+			print("User doesn't exist.")
+			return
+
+		if response == 1:
+			print("Room " + new_room + " doesn't exist - create first!")
+			return
+
+		print("Successfuly switched room to " + new_room)
+		self._current_room = new_room
+
 	def send_room_message(self):
 		if self._connected == False:
 			print("Please connect to a server first!")
@@ -314,7 +421,7 @@ class Client():
 
 		message = input("Please enter message: ")
 
-		response = self.send_request_to_server(7, [self._current_user, self._current_room, message])
+		response = self.send_request_to_server(8, [self._current_user, self._current_room, message])
 
 		if response == None: return
 		else: response = int(response[0])
@@ -341,7 +448,7 @@ class Client():
 			print("Please join or create room first.")
 			return
 
-		response = self.send_request_to_server(8, [self._current_user, self._current_room])
+		response = self.send_request_to_server(9, [self._current_user, self._current_room])
 
 		if response == None: return
 

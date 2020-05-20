@@ -99,10 +99,13 @@ class Server():
 		if(request[0] == 6): 
 			print(addr + " | leave_room : " + str(request[1]))
 			return self._leave_room(request[1][0], request[1][1])
-		if(request[0] == 7): 
+		if(request[0] == 7):
+			print(addr + " | switch_room : " + str(request[1]))
+			return self._switch_room(request[1][0], request[1][1])
+		if(request[0] == 8): 
 			print(addr + " | send_room_message : " + str(request[1]))
 			return self._send_room_message(request[1][0], request[1][1], request[1][2])
-		if(request[0] == 8): 
+		if(request[0] == 9): 
 			print(addr + " | show_room_messages : " + str(request[1]))
 			return self._show_room_messages(request[1][0], request[1][1])
 		if(request[0] == 666): 
@@ -207,6 +210,23 @@ class Server():
 			if user._last_room == room_name: 
 				user._last_room = None
 			return [2]
+
+	def _switch_room(self, username, room_name):
+		#Check that user exists on the server
+		if not (username in self._usernames):
+			return [0]
+
+		#Check that room exists on the server
+		if not (room_name in self._room_names):
+			return [1]
+
+		#Find user
+		user = self._find_user(username)
+
+		#Update user info and return successful switch
+		user._last_room = room_name
+		return [3]
+
 
 	def _send_room_message(self, username, room_name, message):
 		#Check if such room exists
