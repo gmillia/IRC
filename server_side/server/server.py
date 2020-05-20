@@ -82,10 +82,10 @@ class Server():
 
 		addr = address[0] + ":" + str(address[1])
 		if(request[0] == 1): 
-			print(addr + " | create_new_user : " + str(request[1]))
+			print(addr + " | create_new_user | " + " username: " + str(requst[1][0]) + " | password: " + str(request[1][1]))
 			return self._create_new_user(request[1][0], request[1][1])
 		if(request[0] == 2): 
-			print(addr + " | attepmt_user_login : " + str(request[1]))
+			print(addr + " | attepmt_user_login | " + str(request[1]))
 			return self._attempt_user_login(request[1][0], request[1][1])
 		if(request[0] == 3): 
 			print(addr + " | create_new_room : " + str(request[1]))
@@ -112,22 +112,51 @@ class Server():
 			return 1
 
 	def _create_new_user(self, username, password):
+		"""
+		Function that creates new user on the system
+
+		Args:
+			username (String) - username of the user to be created
+			password (String) - password for the user to be created
+
+		Returns:
+			[0] - user already exists
+			[1] - successful user creation on the system
+		"""
+
+		#Check if user with passed username doesn't exist on the system
 		if not (username in self._usernames):
-			new_user = User(username=username, password=password)
-			self._users.append(new_user)
-			self._usernames.append(username)
+			new_user = User(username=username, password=password)	#create new user
+			self._users.append(new_user)							#append user to system user list
+			self._usernames.append(username)						#append username to system username list
 			return [1]
-		else: return [0]
+		else: 
+			return [0]
 
 	def _attempt_user_login(self, username, password):
+		"""
+		Function that tries to log user in (match if the record exists)
+
+		Args:
+			username (String) - username of the user that tries to log in
+			password (String) - password for the user that tries to log in
+
+		Returns:
+			[0] - username doesn't exist on the system OR password doesn't match user
+			[String] - successful login: return name of the last room used by user (can be None)
+		"""
+
+		#Check username existance on the system
 		if not(username in self._usernames):
 			return [0]
 
+		#Match user and password
 		user = self._find_user(username)
 		if user._password != password:
 			return [0]
-		else:
-			return [user._last_room]
+
+		#All checks passed: return room last used by the user
+		return [user._last_room]
 
 	'''
 	def _list_all_users(self):
@@ -147,70 +176,136 @@ class Server():
 	'''
 
 	def _create_new_room(self, room_name, owner):
+		"""
+		Function that creates new room on the system
+
+		Args:
+			room_name (String) - name of the room to be created
+			owner (String) - username of the user that wants to create new room
+
+		Returns:
+			[0] - room already exists on the system
+			[1] - successful room creation
+		"""
+
+		#Check that room doesn't exist on the system yet
 		if not (room_name in self._room_names):
-			new_room = Room(name=room_name, owner=owner)
-			user = self._find_user(owner)	#find user object
-			user._room_names.append(room_name)
-			new_room._users.append(user)	#append user to list of user objects in room	
-			new_room._usernames.append(owner)	#append name to list of usernames in room
-			self._rooms.append(new_room)	#append to list of rooms on server
-			self._room_names.append(room_name)	#append to lst of room names on server
-			user._last_room = room_name 	#update last room user interacted with
+			new_room = Room(name=room_name, owner=owner)	#create new Room object
+			user = self._find_user(owner)					#find user object
+			user._room_names.append(room_name)				#appends room name to the user room names
+			new_room._users.append(user)					#append user to list of user objects in room	
+			new_room._usernames.append(owner)				#append name to list of usernames in room
+			self._rooms.append(new_room)					#append to list of rooms on server
+			self._room_names.append(room_name)				#append to lst of room names on server
+			user._last_room = room_name 					#update last room user interacted with
 			return [1]
-		else: return [0]
+		else: 
+			return [0]
 
 	def _list_all_rooms(self, username, current_room):
-		#Don't return rooms if username doesn't checkout
+		"""
+		Function that returns all rooms existing on the system
+
+		Args:
+			username (String) - username of the user that wants to fetch all rooms
+			current_room (String) - room currently used by the user that wants to fetch all rooms
+
+		Returns:
+			[0] - user doesn't exist on the system
+			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
+		"""
+
+		#Check if user exists on the system
 		if not (username in self._usernames):
 			return [0]
 
-		#User called and doesn't have last room
-		if current_room == None:
-			return [self._last_room, self._room_names]
-
+		#Find user object on the system
 		user = self._find_user(username)
-		user._last_room = current_room
+
+		#Update user last room
+		if user._last_room == None && current_room != None:
+			user._last_room = current_room
+
 		return [user._last_room, self._room_names]
 
 	def _join_room(self, room_name, username):
+		"""
+		Function that lets user join new room
+
+		Args:
+			room_name (String) - name of the server that user wants to join
+			username (String) - username of the user that wants to join new room
+
+		Returns:
+			[0] - room_name (room) doesn't exist on the system
+			[1] - user is already a participant of the room he wants to join
+			[2] - user successfully joined room
+		"""
+
+		#Check if rooms exists on the system
 		if not (room_name in self._room_names):
 			return [0]
 
+		#Find Room object on the system
 		room = self._find_room(room_name)
 
 		#User already joined room
 		if username in room._usernames:
 			return [1]
-		else:
-			user = self._find_user(username)
-			#Update room info
-			room._users.append(user)
-			room._usernames.append(username)
-			#Update user info
-			user._rooms.append(room)
-			user._room_names.append(room_name)
-			user._last_room = room_name
-			return [2]
+	
+		user = self._find_user(username)		#create new User object
+		room._users.append(user)				#append user to room users list
+		room._usernames.append(username)		#append username to room usernames list
+		user._rooms.append(room)				#append room to user rooms list
+		user._room_names.append(room_name)		#append room name to user room names
+		user._last_room = room_name 			#update user last room to room_name
+		return [2]
 
 	def _leave_room(self, room_name, username):
+		"""
+		Function that lets user to leave room
+
+		Args:
+			room_name (String) - name of the room user wants to leave
+			username (String) - username of the user that wants to leave room
+
+		Retuens:
+			[0] - room with room_name doesn't exist on the system
+			[1] - user with username doesn't exist on the system
+			[2] - room doesn't have user with username as a participant 
+			[3] - user doesn't have room with room_name in rooms that he participates in
+
+		"""
+
+		#Check if room doesn't exist on the system
 		if not (room_name in self._room_names):
 			return [0]
 
+		#Check if username doesn't exist on the system
+		if not (username in self._usernames):
+			return [1]
+
+		#Find Room object on the system
 		room = self._find_room(room_name)
 
+		#Check if user with username is in rooms usernames list
 		if  not (username in room._usernames):
-			return [1]
-		else:
-			user = self._find_user(username)
-			#Update room stuff
-			room._users.remove(user)
-			room._usernames.remove(username)
-			#Update user info
-			user._rooms.remove(room)
-			user._room_names.remove(room_name)
-			if user._last_room == room_name: 
-				user._last_room = None
 			return [2]
+		
+		#Find user objet in the system
+		user = self._find_user(username)
+
+		#Check 
+
+		#Update room stuff
+		room._users.remove(user)
+		room._usernames.remove(username)
+		#Update user info
+		user._rooms.remove(room)
+		user._room_names.remove(room_name)
+		if user._last_room == room_name: 
+			user._last_room = None
+		return [2]
 
 	def _switch_room(self, username, room_name):
 		#Check that user exists on the server
