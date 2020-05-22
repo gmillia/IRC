@@ -322,7 +322,11 @@ class Server():
 			room_name (String) - name of the room that user wants to switch to
 
 		Returns: 
-			[0] - 
+			[0] - user with given username doesn't exist on the system
+			[1] - room with given room_name doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[4] - successfuly switched room
 		"""
 
 		#Check that user exists on the server
@@ -333,22 +337,47 @@ class Server():
 		if not (room_name in self._room_names):
 			return [1]
 
+		#Find room
+		room = self._find_room(room_name)
+
+		#Check user in room
+		if not (username in room._usernames):
+			return [2]
+
 		#Find user
 		user = self._find_user(username)
 
 		#Check if user participates in the room he wants to switch to
 		if not (room_name in user._room_names):
-			return [2]
+			return [3]
 
 		#Update user info and return successful switch
 		user._last_room = room_name
-		return [3]
-
+		return [4]
 
 	def _send_room_message(self, username, room_name, message):
+		"""
+		Function that sends a rooms message: appends message list in room object
+
+		Args: 
+			username (String) - username of the user trying to send message
+			room_name (String) - name of the room user is trying to send message to
+			message (String) - message user is trying to send to a room
+
+		Returns: 
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[4] - message successfuly sent
+		"""
 		#Check if such room exists
 		if not (room_name in self._room_names):
 			return [0]
+
+		#Check if user exists
+		if not (username in self._usernames):
+			return [1]
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
@@ -356,11 +385,11 @@ class Server():
 
 		#Check that user is in the room in room side
 		if  not (username in room._usernames):
-			return [1]
+			return [2]
 
 		#Check that user in the room in user side
 		if not (room_name in user._room_names):
-			return [2]
+			return [3]
 
 		#Passed all checks, can actually send a message
 		user._last_room = room_name
@@ -369,15 +398,33 @@ class Server():
 
 		#Add message to room messages
 		room._messages.append(final_message)
-		return [3]
+		return [4]
 
 		#Send message to all room users
 		#Probably not needed - users will fetch messages from current room
 
 	def _show_room_messages(self, username, room_name):
+		"""
+		Function that returns room messages to the user who requested to view room messages
+
+		Args: 
+			username (String) - username of the user that wants to switch rooms
+			room_name (String) - name of the room that user wants to switch to
+
+		Returns:
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[room_messages] - list of room messages
+		"""
 		#Check if such room exists
 		if not (room_name in self._room_names):
 			return 0
+
+		#Check that room exists on the server
+		if not (room_name in self._room_names):
+			return [1]
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
@@ -385,15 +432,54 @@ class Server():
 
 		#Check that user is in the room in room side
 		if  not (username in room._usernames):
-			return [1]
+			return [2]
 
 		#Check that user in the room in user side
 		if not (room_name in user._room_names):
-			return [2]
+			return [3]
 
 		#All checks passed, can send back messages
 		user.last_room = room_name
 		return room._messages
+
+	def _view_room_members(self, username, room_name):
+		"""
+		Function that returns room messages to the user who requested to view room messages
+
+		Args: 
+			username (String) - username of the user that wants to switch rooms
+			room_name (String) - name of the room that user wants to switch to
+
+		Returns:
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[room_members] - list of room members
+		"""
+		#Check if such room exists
+		if not (room_name in self._room_names):
+			return 0
+
+		#Check that room exists on the server
+		if not (room_name in self._room_names):
+			return [1]
+
+		#Room exists: Find room object and User object
+		room = self._find_room(room_name)
+		user = self._find_user(username)
+
+		#Check that user is in the room in room side
+		if  not (username in room._usernames):
+			return [2]
+
+		#Check that user in the room in user side
+		if not (room_name in user._room_names):
+			return [3]
+
+		#All checks passed, can send back messages
+		user.last_room = room_name
+		return room._usernames
 
 	#Helper functions
 	def _find_user(self, username):

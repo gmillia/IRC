@@ -33,6 +33,7 @@ class Client():
 			_Option("Switch room", self.switch_room),
 			_Option("Send message to room: ", self.send_room_message),
 			_Option("View room messages.", self.view_room_messages),
+			_Option("View room members", self.view_room_members),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -146,9 +147,9 @@ class Client():
 	def new_user_menu(self):
 		"""
 		Function that creates a new user in the system.
-		Server response is an array that consists of one item: integer
-		0 signifies error from server
-		1 signifies successful creation of the user
+		Server response is an array that consists of one item: 
+			[0] - user already exists
+			[1] - successful user creation on the systemser
 		"""
 		#Check that client is connected
 		if self._connected == False:
@@ -213,8 +214,8 @@ class Client():
 		"""
 		Function that logs user in (matches user with user on the system)
 		Server response is a list:
-		0 signifies some error on login
-		On success server returns last_room used by the user (can be valid room or None)
+			[0] - username doesn't exist on the system OR password doesn't match user
+			[String] - successful login: return name of the last room used by user (can be None)
 		"""
 
 		#Check if connected to a server first
@@ -277,8 +278,8 @@ class Client():
 		"""
 		Function that creates new room on the system
 		Serer responds with a list consisting of just 1 item:
-		0 signifies server error
-		1 signifies successful creation of new room
+			[0] - room already exists on the system
+			[1] - successful room creation
 		"""
 
 		#Check if connected to a server
@@ -323,8 +324,8 @@ class Client():
 		Server responds with a list consisting either of 1 or 2 items:
 		When server returns a list with just 1 item, it means there was an error on the server side with the request 
 		When server returns a list with 2 items, it means successful request:
-		item 1 = last_room used by the user (this is returned in case user logs in and first thing checks all rooms)
-		item 2 = all rooms on the system
+			[0] - user doesn't exist on the system
+			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
 		"""
 
 		#Check that client is connected to a server
@@ -365,9 +366,9 @@ class Client():
 		"""
 		Function that lets user join new room and automatically switches user current room to this newly joined room
 		Server responds with a list consisting of 1 item:
-		0 signifies room non-existence
-		1 signifies that user is already a participant of that particular room
-		2 signifies successful join
+			[0] - room_name (room) doesn't exist on the system
+			[1] - user is already a participant of the room he wants to join
+			[2] - user successfully joined room
 		"""
 
 		#Check if client is connected to a server
@@ -465,9 +466,11 @@ class Client():
 		"""
 		Function that lets user switch to a new room that he is a participant of
 		Server response is a list that consists of one item:
-		0 signifies that user doesn't exist
-		1 signifies that room user tries to switch to doesn't exist
-		2 signifies successful switch
+			[0] - user with given username doesn't exist on the system
+			[1] - room with given room_name doesn't exist on the system
+			[2] - user with a givn username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[4] - successfuly switched room
 		"""
 
 		#Check that client is connected to a server
@@ -504,11 +507,15 @@ class Client():
 
 		#Check for server errors
 		if response == 0:
-			print("User doesn't exist.")
+			print(self._current_user + " doesn't exist. Please create user first!")
 			return
 
 		if response == 1:
 			print("Room " + new_room + " doesn't exist - create first!")
+			return
+
+		if response == 2 || response == 3:
+			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
 			return
 
 		#All checks passed: room Successfully switched: can update local info
@@ -519,10 +526,11 @@ class Client():
 		"""
 		Function that lets user send message to a room he is currently in
 		Server response is a list that consists of one item:
-		0 signifies that system doesn't have user that tries to send the message (need to create user first)
-		1 signifies that system doesn't have a room that user wants to send message to
-		2 signifies that user doesn't participate in a room he wants to send message to
-		3 signifies successful message sent
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[4] - message successfuly sent
 		"""
 
 		#Check that client is connected to a server
@@ -559,11 +567,15 @@ class Client():
 
 		#Check for server errors
 		if response == 0:
-			print("Can't send message: room doesn't exist. Create or join first.")
+			print("Can't send a message: " + self._current_room + " doesn't exist. Create or join first.")
 			return
 
-		if (response == 1 or response == 2):
-			print("Can't send message: join the room first.")
+		if response == 1:
+			print("Can't send a message: " + self._current_user + " doesn't exist. Please create user first!")
+			return
+
+		if response == 2 || response == 3:
+			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
 			return
 
 		#All checks passed: display message
@@ -573,10 +585,11 @@ class Client():
 		"""
 		Function that gets all the messaged from current user room and displays them to a user
 		Server response is a list that consists of 1 item:
-		0 - system doesn't have a room user tries to fetch messages from
-		1 - user is not found to be a participant of the room
-		2 - room is not found to be in user room list (rooms that user is a participant of)
-		list of messages - self-explanatory
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[room_messages] - list of room messages
 		"""
 
 		#Check that client is connected to a server
@@ -603,10 +616,13 @@ class Client():
 		#Check server errors: On successful message fetch server can send empty list (no messages in the room): check for that
 		if len(response) > 0:
 			if type(response[0]) == str and int(response[0]) == 0:
-				print("Can't send message: room doesn't exist. Create or join first.")
+				print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
 				return
 
-			if type(response[0]) == str and (int(response[0]) == 1 or int(response[0]) == 2):
+			if type(response[0]) == str and int(response[0]) == 1:
+				print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
+
+			if type(response[0]) == str and (int(response[0]) == 2 or int(response[0]) == 3):
 				print("Can't send message: join the room first.")
 				return
 
@@ -619,6 +635,58 @@ class Client():
 		print("**************************************************************")
 		for i in range(len(response)):
 			print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
+
+		print("**************************************************************")
+
+	def view_room_members(self):
+		"""
+		Function that fetches all room users and displays it to the current user
+		Calls a server and gets a response in form of a list:
+			[0] - room with a given room_name doesn't exist on the system
+			[1] - user with a given username doesn't exist on the system
+			[2] - user with a given username doesn't exist in room users records
+			[3] - room with a given room_name doesn't exist in user rooms records
+			[room_members] - list of room members
+		"""
+
+		#Check that client is connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Check that user is logged in
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+		
+		#Check that user is a room participant
+		if self._current_room == None:
+			print("Please join or create room first.")
+			return
+
+		#Send request to server to fetch all messaged from current room
+		response = self.send_request_to_server(10, [self._current_user, self._current_room])
+
+		#Check errored request
+		if response == None: return
+
+		#Check server errors
+		if type(response[0]) == str and int(response[0]) == 0:
+			print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
+			return
+
+		if type(response[0]) == str and int(response[0]) == 1:
+			print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
+
+		if type(response[0]) == str and (int(response[0]) == 2 or int(response[0]) == 3):
+			print("Can't send message: join the room first.")
+			return
+	
+		#Print all members of a room
+		print("**************************************************************")
+		print("#", "Username")
+		for i in range(len(response)):
+			print(i + 1, response[i])
 
 		print("**************************************************************")
 
