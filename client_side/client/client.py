@@ -179,7 +179,7 @@ class Client():
 			return
 
 		#All checks passed: user created on the system: can update local info
-		print("Successfuly created new user " + username)
+		print("Successfully created new user " + username)
 		self._current_user = username
 
 	'''
@@ -202,7 +202,7 @@ class Client():
 		else: response = int(response)
 
 		if response == 1:
-			print("Successfuly removed user " + username + " from the server.")
+			print("Successfully removed user " + username + " from the server.")
 		elif response == 0:
 			print("User " + username + " doesn't exist!")
 		elif response == 2:
@@ -213,7 +213,7 @@ class Client():
 		"""
 		Function that logs user in (matches user with user on the system)
 		Server response is a list:
-		0 signigies some error on login
+		0 signifies some error on login
 		On success server returns last_room used by the user (can be valid room or None)
 		"""
 
@@ -248,14 +248,14 @@ class Client():
 			return
 
 		#All checks have passed: user logged in: can update local info
-		print("Successfuly logged in to " + username)
+		print("Successfully logged in to " + username)
 		self._current_user = username
 		self._current_room = response[0]
 
 	def logout_menu(self):
 		"""
 		Function that doesn't communicate with server:
-		Checks for connection and current user existance, and clears local info, thus "logging out"
+		Checks for connection and current user existence, and clears local info, thus "logging out"
 		"""
 		#Check if not connected to a server
 		if self._connected == False:
@@ -271,7 +271,7 @@ class Client():
 		self._current_user = None
 		self._current_room = None
 
-		print("Successfuly logged out.")
+		print("Successfully logged out.")
 
 	def create_new_room_menu(self):
 		"""
@@ -314,7 +314,7 @@ class Client():
 			return
 
 		#All checks passed: new room created on the system: can update local info
-		print("Successfuly created new room " + room_name)
+		print("Successfully created new room " + room_name)
 		self._current_room = room_name
 
 	def list_all_rooms_menu(self):
@@ -363,14 +363,14 @@ class Client():
 
 	def join_new_room_menu(self):
 		"""
-		Function that lets user join new room and qutomatically switches user current room to this newly joined room
+		Function that lets user join new room and automatically switches user current room to this newly joined room
 		Server responds with a list consisting of 1 item:
-		0 signifies room non-existance
+		0 signifies room non-existence
 		1 signifies that user is already a participant of that particular room
 		2 signifies successful join
 		"""
 
-		#Check if cleint is connected to a server
+		#Check if client is connected to a server
 		if self._connected == False:
 			print("Please connect to a server first!")
 			return
@@ -394,7 +394,7 @@ class Client():
 		#Check errored request
 		if response == None: return
 
-		#Transofmr first item on server reponse to an integer
+		#Transform first item on server response to an integer
 		response = int(response[0])
 
 		#Check for server errors
@@ -407,7 +407,7 @@ class Client():
 			return
 
 		#All checks passed: user joined new room: can update local info
-		print("Successfuly joined new room " + room_name)
+		print("Successfully joined new room " + room_name)
 		self._current_room = room_name
 
 	def leave_room(self):
@@ -457,8 +457,8 @@ class Client():
 			print("You can't leave room that you haven't joined. Join first!")
 			return
 
-		#All checks passed: user successfuly left room: can update local info
-		print("Successfuly left " + self._current_room)
+		#All checks passed: user Successfully left room: can update local info
+		print("Successfully left " + self._current_room)
 		self._current_room = None
 
 	def switch_room(self):
@@ -466,7 +466,7 @@ class Client():
 		Function that lets user switch to a new room that he is a participant of
 		Server response is a list that consists of one item:
 		0 signifies that user doesn't exist
-		1 signifies that room user tries to swtich to doesn't exist
+		1 signifies that room user tries to switch to doesn't exist
 		2 signifies successful switch
 		"""
 
@@ -485,7 +485,7 @@ class Client():
 			print("Please join or create room first.")
 			return
 
-		#Promt user to input name of the room they want to switch to
+		#Prompt user to input name of the room they want to switch to
 		new_room = print("Please enter room to go to: ")
 
 		#Validate user input
@@ -496,7 +496,7 @@ class Client():
 		#Send request to a server to switch current room
 		response = self.send_request_to_server(7, [self._current_user, new_room])
 
-		#Check for errorred request
+		#Check for errored request
 		if response == None: return
 
 		#Transform first item on response to be an integer
@@ -511,8 +511,8 @@ class Client():
 			print("Room " + new_room + " doesn't exist - create first!")
 			return
 
-		#All checks passed: room successfuly switched: can update local info
-		print("Successfuly switched room to " + new_room)
+		#All checks passed: room Successfully switched: can update local info
+		print("Successfully switched room to " + new_room)
 		self._current_room = new_room
 
 	def send_room_message(self):
@@ -551,10 +551,10 @@ class Client():
 		#Send request to server to send a message to a room
 		response = self.send_request_to_server(8, [self._current_user, self._current_room, message])
 
-		#Check errorred request
+		#Check errored request
 		if response == None: return
 		
-		#Transform first item on the server reponse list to be an integer
+		#Transform first item on the server response list to be an integer
 		response = int(response[0])
 
 		#Check for server errors
@@ -597,7 +597,7 @@ class Client():
 		#Send request to server to fetch all messaged from current room
 		response = self.send_request_to_server(9, [self._current_user, self._current_room])
 
-		#Check errorred request
+		#Check errored request
 		if response == None: return
 
 		#Check server errors: On successful message fetch server can send empty list (no messages in the room): check for that

@@ -77,15 +77,15 @@ class Server():
 		request [0] = act to be performed
 		request [1] = data that is needed to perform act
 
-		description of the act flags can be founds in docs
+		description of the act flags can be found in docs
 		"""
 
 		addr = address[0] + ":" + str(address[1])
 		if(request[0] == 1): 
-			print(addr + " | create_new_user | " + " username: " + str(requst[1][0]) + " | password: " + str(request[1][1]))
+			print(addr + " | create_new_user | " + " username: " + str(request[1][0]) + " | password: " + str(request[1][1]))
 			return self._create_new_user(request[1][0], request[1][1])
 		if(request[0] == 2): 
-			print(addr + " | attepmt_user_login | " + str(request[1]))
+			print(addr + " | attempt_user_login | " + str(request[1]))
 			return self._attempt_user_login(request[1][0], request[1][1])
 		if(request[0] == 3): 
 			print(addr + " | create_new_room : " + str(request[1]))
@@ -146,8 +146,8 @@ class Server():
 			[String] - successful login: return name of the last room used by user (can be None)
 		"""
 
-		#Check username existance on the system
-		if not(username in self._usernames): 
+		#Check username existence on the system
+		if not(username in self._usernames):
 			return [0]
 
 		#Match user and password
@@ -196,7 +196,7 @@ class Server():
 			new_room._users.append(user)					#append user to list of user objects in room	
 			new_room._usernames.append(owner)				#append name to list of usernames in room
 			self._rooms.append(new_room)					#append to list of rooms on server
-			self._room_names.append(room_name)				#append to lst of room names on server
+			self._room_names.append(room_name)				#append to list of room names on server
 			user._last_room = room_name 					#update last room user interacted with
 			return [1]
 		else: 
@@ -242,7 +242,7 @@ class Server():
 			[2] - user successfully joined room
 		"""
 
-		#Check if rooms exists on the system
+		#Check if room exists on the system
 		if not (room_name in self._room_names):
 			return [0]
 
@@ -269,12 +269,12 @@ class Server():
 			room_name (String) - name of the room user wants to leave
 			username (String) - username of the user that wants to leave room
 
-		Retuens:
+		Returns:
 			[0] - room with room_name doesn't exist on the system
 			[1] - user with username doesn't exist on the system
 			[2] - room doesn't have user with username as a participant 
 			[3] - user doesn't have room with room_name in rooms that he participates in
-			[4] - user succesfully left room
+			[4] - user successfully left room
 
 		"""
 
@@ -293,7 +293,7 @@ class Server():
 		if  not (username in room._usernames):
 			return [2]
 		
-		#Find user objet in the system
+		#Find user object in the system
 		user = self._find_user(username)
 
 		#Check if user has room_name in his room_names list
@@ -315,7 +315,7 @@ class Server():
 
 	def _switch_room(self, username, room_name):
 		"""
-		Function that lets user swtich from one room to another room
+		Function that lets user switch from one room to another room
 
 		Args: 
 			username (String) - username of the user that wants to switch rooms
@@ -372,7 +372,7 @@ class Server():
 		return [3]
 
 		#Send message to all room users
-		#Probably not needed - users will fetch messges from current room
+		#Probably not needed - users will fetch messages from current room
 
 	def _show_room_messages(self, username, room_name):
 		#Check if such room exists
