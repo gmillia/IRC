@@ -23,12 +23,12 @@ class Client():
 		options = [
 			_Option("Connect to a server.", self.attempt_connect_to_server),
 			_Option("Disconnect from a server.", self.disconnect_from_server),
-			_Option("Create new user.", self.new_user_menu),
-			_Option("Login to existing account.", self.login_menu),
-			_Option("Logout", self.logout_menu),
-			_Option("Create new room.", self.create_new_room_menu),
-			_Option("List all rooms.", self.list_all_rooms_menu),
-			_Option("Join new room.", self.join_new_room_menu),
+			_Option("Create new user.", self.create_new_user),
+			_Option("Login to existing account.", self.login),
+			_Option("Logout", self.logout),
+			_Option("Create new room.", self.create_new_room),
+			_Option("List all rooms.", self.list_all_rooms),
+			_Option("Join new room.", self.join_new_room),
 			_Option("Leave room.", self.leave_room),
 			_Option("Switch room", self.switch_room),
 			_Option("Send message to room: ", self.send_room_message),
@@ -146,7 +146,7 @@ class Client():
 	#MENU HELPERS####################################################################MENU HELPERS#
 	##############################################################################################
 
-	def new_user_menu(self):
+	def create_new_user(self):
 		"""
 		Function that creates a new user in the system.
 		Server response is an array that consists of one item: 
@@ -190,34 +190,7 @@ class Client():
 		print("Successfully created new user " + username)
 		self._current_user = username
 
-	'''
-	def list_all_users_menu(self):
-		response = self.send_request_to_server(2)
-		if response != None:
-			if len(response) == 0:
-				print("Server doesn't have any users, add users first!")
-			else:
-				print("#", "Username")
-				for i in range(len(response)):
-					print(i + 1, response(i))
-
-	def remove_user_menu(self):
-		username = input("Enter username of the user to remove: ")
-
-		response = self.send_request_to_server(3, username)
-
-		if response == None: return
-		else: response = int(response)
-
-		if response == 1:
-			print("Successfully removed user " + username + " from the server.")
-		elif response == 0:
-			print("User " + username + " doesn't exist!")
-		elif response == 2:
-			print("Error removing " + username + ". Try again.")
-	'''
-
-	def login_menu(self):
+	def login(self):
 		"""
 		Function that logs user in (matches user with user on the system)
 		Server response is a list:
@@ -260,7 +233,7 @@ class Client():
 		self._current_user = username
 		self._current_room = response[0]
 
-	def logout_menu(self):
+	def logout(self):
 		"""
 		Function that doesn't communicate with server:
 		Checks for connection and current user existence, and clears local info, thus "logging out"
@@ -281,7 +254,7 @@ class Client():
 
 		print("Successfully logged out.")
 
-	def create_new_room_menu(self):
+	def create_new_room(self):
 		"""
 		Function that creates new room on the system
 		Serer responds with a list consisting of just 1 item:
@@ -325,7 +298,7 @@ class Client():
 		print("Successfully created new room " + room_name)
 		self._current_room = room_name
 
-	def list_all_rooms_menu(self):
+	def list_all_rooms(self):
 		"""
 		Function that lists all rooms on the system
 		Server responds with a list consisting either of 1 or 2 items:
@@ -369,7 +342,7 @@ class Client():
 		for i in range(len(response[1])):
 			print(i + 1, response[1][i])
 
-	def join_new_room_menu(self):
+	def join_new_room(self):
 		"""
 		Function that lets user join new room and automatically switches user current room to this newly joined room
 		Server responds with a list consisting of 1 item:

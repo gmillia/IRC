@@ -23,10 +23,6 @@ class Server():
 		self._rooms = []
 		self._room_names = []
 
-		self._run = True
-
-		self._current_client = None
-
 	def start(self):
 		try: 
 			self._server_socket.bind((self._host, self._port))
@@ -66,8 +62,12 @@ class Server():
 
 			#Send response on user request
 			request = eval(data.decode('utf-8'))
-			#All helper functions return a list as a response
-			response = str(self._request_handler(request, address))
+			#All helper functions return a list as a response. If lsit isn't returned - means there is an error
+			response = self._request_handler(request, address)
+			if type(response) != list:
+				connection.close()
+			else:
+				response = str(response)
 			try:
 				connection.sendall(response.encode())
 			except OSError:
@@ -85,46 +85,131 @@ class Server():
 		"""
 
 		addr = address[0] + ":" + str(address[1])
+
 		if(request[0] == 1): 
-			print(addr + " | create_new_user | " + " username: " + str(request[1][0]) + " | password: " + str(request[1][1]))
-			return self._create_new_user(request[1][0], request[1][1])
+			try:
+				print(addr + " | create_new_user | " + " username: " + str(request[1][0]) + " | password: " + str(request[1][1]))
+				result = self.create_new_user(request[1][0], request[1][1])
+				print(addr + " | create_new_user | result | " + str(result))
+				return result
+			except:
+				print(addr + " | create_new_user | ERROR")
+				return
+
 		if(request[0] == 2): 
-			print(addr + " | attempt_user_login | " + str(request[1]))
-			return self._attempt_user_login(request[1][0], request[1][1])
+			try:
+				print(addr + " | login | " + str(request[1]))
+				result = self.login(request[1][0], request[1][1])
+				print(addr + " | login | result | " + str(result))
+				return result
+			except:
+				print(addr + " | login | ERROR")
+				return
+
 		if(request[0] == 3): 
-			print(addr + " | create_new_room : " + str(request[1]))
-			return self._create_new_room(request[1][0], request[1][1])
+			try:
+				print(addr + " | create_new_room : " + str(request[1]))
+				result = self.create_new_room(request[1][0], request[1][1])
+				print(addr + " | create_new_room | result | " + str(result))
+				return result
+			except:
+				print(addr + " | create_new_room | ERROR")
+				return
+
 		if(request[0] == 4): 
-			print(addr + " | list_all_rooms : " + str(request[1]))
-			return self._list_all_rooms(request[1][0], request[1][1])
+			try:
+				print(addr + " | list_all_rooms : " + str(request[1]))
+				result = self.list_all_rooms(request[1][0], request[1][1])
+				print(addr + " | list_all_rooms | result | " + str(result))
+				return result
+			except:
+				print(addr + " | list_all_rooms | ERROR")
+				return
+
 		if(request[0] == 5): 
-			print(addr + " | join_room : " + str(request[1]))
-			return self._join_room(request[1][0], request[1][1])
+			try:
+				print(addr + " | join_new_room : " + str(request[1]))
+				result = self.join_new_room(request[1][0], request[1][1])
+				print(addr + " | join_new_room | result | " + str(result))
+				return result
+			except:
+				print(addr + " | join_new_room | ERROR")
+				return
+
 		if(request[0] == 6): 
-			print(addr + " | leave_room : " + str(request[1]))
-			return self._leave_room(request[1][0], request[1][1])
+			try:
+				print(addr + " | leave_room : " + str(request[1]))
+				result = self.leave_room(request[1][0], request[1][1])
+				print(addr + " | leave_room | result | " + str(result))
+				return result
+			except:
+				print(addr + " | leave_room | ERROR")
+				return
+
 		if(request[0] == 7):
-			print(addr + " | switch_room : " + str(request[1]))
-			return self._switch_room(request[1][0], request[1][1])
+			try:
+				print(addr + " | switch_room : " + str(request[1]))
+				result = self.switch_room(request[1][0], request[1][1])
+				print(addr + " | switch_room | result | " + str(result))
+				return result
+			except:
+				print(addr + " | switch_room | ERROR")
+				return
+
 		if(request[0] == 8): 
-			print(addr + " | send_room_message : " + str(request[1]))
-			return self._send_room_message(request[1][0], request[1][1], request[1][2])
+			try:
+				print(addr + " | send_room_message : " + str(request[1]))
+				result = self.send_room_message(request[1][0], request[1][1], request[1][2])
+				print(addr + " | send_room_message | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_room_message | ERROR")
+				return
+
 		if(request[0] == 9): 
-			print(addr + " | show_room_messages : " + str(request[1]))
-			return self._show_room_messages(request[1][0], request[1][1])
+			try:
+				print(addr + " | view_room_messages : " + str(request[1]))
+				result = self.view_room_messages(request[1][0], request[1][1])
+				print(addr + " | view_room_messages | result | " + str(result))
+				return result
+			except:
+				print(addr + " | view_room_messages | ERROR")
+				return
+
 		if(request[0] == 10): 
-			print(addr + " | show_room_members : " + str(request[1]))
-			return self._show_room_members(request[1][0], request[1][1])
+			try:
+				print(addr + " | view_room_members : " + str(request[1]))
+				result = self.view_room_members(request[1][0], request[1][1])
+				print(addr + " | view_room_members | result | " + str(result))
+				return result
+			except:
+				print(addr + " | view_room_members | ERROR")
+				return
+
 		if(request[0] == 11): 
-			print(addr + " | _send_personal_message : " + str(request[1]))
-			return self._send_personal_message(request[1][0], request[1][1], request[1][2])
+			try:
+				print(addr + " | _send_personal_message : " + str(request[1]))
+				result = self.send_personal_message(request[1][0], request[1][1], request[1][2])
+				print(addr + " | send_personal_message | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_personal_message | ERROR")
+				return
+
 		if(request[0] == 12): 
-			print(addr + " | _view_personal_inbox : " + str(request[1]))
-			return self._view_personal_inbox(request[1][0])
+			try:
+				print(addr + " | view_personal_inbox : " + str(request[1]))
+				result = self.view_personal_inbox(request[1][0])
+				print(addr + " | view_personal_inbox | result | " + str(result))
+				return result
+			except:
+				print(addr + " | view_personal_inbox | ERROR")
+				return
+
 		if(request[0] == 666): 
 			return 1
 
-	def _create_new_user(self, username, password):
+	def create_new_user(self, username, password):
 		"""
 		Function that creates new user on the system
 
@@ -146,7 +231,7 @@ class Server():
 		else: 
 			return [0]
 
-	def _attempt_user_login(self, username, password):
+	def login(self, username, password):
 		"""
 		Function that tries to log user in (match if the record exists)
 
@@ -171,24 +256,7 @@ class Server():
 		#All checks passed: return room last used by the user
 		return [user._last_room]
 
-	'''
-	def _list_all_users(self):
-		return self._usernames
-
-	def _remove_user(self, username):
-		#User doesn't exist
-		if not (username in self._usernames):
-			return 0
-		else:
-			try:
-				del self._users[self._find_item_index(username, self._usernames)]
-				self._usernames.remove(username)
-				return 1
-			except:
-				return 2
-	'''
-
-	def _create_new_room(self, room_name, owner):
+	def create_new_room(self, room_name, owner):
 		"""
 		Function that creates new room on the system
 
@@ -215,7 +283,7 @@ class Server():
 		else: 
 			return [0]
 
-	def _list_all_rooms(self, username, current_room):
+	def list_all_rooms(self, username, current_room):
 		"""
 		Function that returns all rooms existing on the system
 
@@ -241,7 +309,7 @@ class Server():
 
 		return [user._last_room, self._room_names]
 
-	def _join_room(self, room_name, username):
+	def join_new_room(self, room_name, username):
 		"""
 		Function that lets user join new room
 
@@ -274,7 +342,7 @@ class Server():
 		user._last_room = room_name 			#update user last room to room_name
 		return [2]
 
-	def _leave_room(self, room_name, username):
+	def leave_room(self, room_name, username):
 		"""
 		Function that lets user to leave room
 
@@ -326,7 +394,7 @@ class Server():
 		#Successful removal
 		return [4]
 
-	def _switch_room(self, username, room_name):
+	def switch_room(self, username, room_name):
 		"""
 		Function that lets user switch from one room to another room
 
@@ -368,7 +436,7 @@ class Server():
 		user._last_room = room_name
 		return [4]
 
-	def _send_room_message(self, username, room_name, message):
+	def send_room_message(self, username, room_name, message):
 		"""
 		Function that sends a rooms message: appends message list in room object
 
@@ -416,7 +484,7 @@ class Server():
 		#Send message to all room users
 		#Probably not needed - users will fetch messages from current room
 
-	def _show_room_messages(self, username, room_name):
+	def view_room_messages(self, username, room_name):
 		"""
 		Function that returns room messages to the user who requested to view room messages
 
@@ -455,7 +523,7 @@ class Server():
 		user.last_room = room_name
 		return room._messages
 
-	def _show_room_members(self, username, room_name):
+	def view_room_members(self, username, room_name):
 		"""
 		Function that returns room messages to the user who requested to view room messages
 
@@ -494,7 +562,7 @@ class Server():
 		user.last_room = room_name
 		return room._usernames
 
-	def _send_personal_message(self, username, recipient, message):
+	def send_personal_message(self, username, recipient, message):
 		"""
 		Function that sends personal message from one user to another: inputs messge into message list
 
@@ -526,7 +594,7 @@ class Server():
 
 		return [2]
 
-	def _view_personal_inbox(self, username):
+	def view_personal_inbox(self, username):
 		"""
 		Function fetches users inbox and sends it back to the user to view
 
