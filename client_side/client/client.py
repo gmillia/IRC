@@ -34,6 +34,8 @@ class Client():
 			_Option("Send message to room: ", self.send_room_message),
 			_Option("View room messages.", self.view_room_messages),
 			_Option("View room members", self.view_room_members),
+			_Option("Send personal message", self.send_personal_message),
+			_Option("View personal inbox", self.view_personal_inbox),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -151,9 +153,14 @@ class Client():
 			[0] - user already exists
 			[1] - successful user creation on the systemser
 		"""
+
 		#Check that client is connected
 		if self._connected == False:
 			print("Please connect to a server first!")
+			return
+
+		if self._current_user != None:
+			print("Please logout first.")
 			return
 
 		#Prompt user for input
@@ -161,7 +168,7 @@ class Client():
 		password = input("Enter new user password: ")
 
 		#Validate input
-		if len(username) == 0 or len(password) == 0:
+		if username == None or password == None or len(username) == 0 or len(password) == 0:
 			print("Invalid input, please try again!")
 			return
 
@@ -233,7 +240,7 @@ class Client():
 		password = input("Enter user password: ")
 
 		#Validate user input
-		if len(username) == 0 or len(password) == 0:
+		if username == None or password == None or len(username) == 0 or len(password) == 0:
 			print("Invalid input, please try again!")
 			return
 
@@ -296,7 +303,7 @@ class Client():
 		room_name = input("Enter new room name: ")
 
 		#Validate user input
-		if len(room_name) == 0:
+		if room_name == None or len(room_name) == 0:
 			print("Invalid input, please try again!")
 			return
 
@@ -385,7 +392,7 @@ class Client():
 		room_name = input("Please enter name of the room to join: ")
 
 		#Validate used input
-		if len(room_name) == 0:
+		if room_name == None or len(room_name) == 0:
 			print("Invalid input, please try again!")
 			return 
 
@@ -489,10 +496,10 @@ class Client():
 			return
 
 		#Prompt user to input name of the room they want to switch to
-		new_room = print("Please enter room to go to: ")
+		new_room = input("Please enter room to go to: ")
 
 		#Validate user input
-		if len(new_room) == 0:
+		if new_room == None or len(new_room) == 0:
 			print("Invalid input, please try again!")
 			return
 
@@ -514,7 +521,7 @@ class Client():
 			print("Room " + new_room + " doesn't exist - create first!")
 			return
 
-		if response == 2 || response == 3:
+		if response == 2 or response == 3:
 			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
 			return
 
@@ -552,7 +559,7 @@ class Client():
 		message = input("Please enter message: ")
 
 		#Validate user input
-		if len(message) == 0:
+		if message == None or len(message) == 0:
 			print("Invalid input, please try again!")
 			return 
 
@@ -574,7 +581,7 @@ class Client():
 			print("Can't send a message: " + self._current_user + " doesn't exist. Please create user first!")
 			return
 
-		if response == 2 || response == 3:
+		if response == 2 or response == 3:
 			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
 			return
 
@@ -670,25 +677,122 @@ class Client():
 		#Check errored request
 		if response == None: return
 
+		#When trying to convert to int, it will fail when response returned list with users (e.g.: can't convert John to int), and except will catch it (meaning valid response)
+		try:
+			#Check server errors
+			if len(response) > 0:
+				if int(response[0]) == 0:
+					print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
+					return
+
+				if int(response[0]) == 1:
+					print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
+
+				if int(response[0]) == 2 or int(response[0]) == 3:
+					print("Can't send message: join the room first.")
+					return
+			else:
+				raise 
+		except:
+			#Print all members of a room
+			print("**************************************************************")
+			print("#", "Username")
+			for i in range(len(response)):
+				print(i + 1, response[i])
+
+			print("**************************************************************")
+
+	def send_personal_message(self):
+		"""
+		Function that lets user send personal message to another user
+		Calls server-side function that sends back response in form of a list:
+			[0] - user with given username doesn't exist on the system
+			[1] - user with recipient username doesn't exist on the system
+			[2] - successful message sent
+		"""
+
+		#Check that client is connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
+			return
+
+		#Check that user is logged in
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		#Prompt user input for recipient name
+		recipient = input("Please enter username of the user you want to send message to: ")
+
+		#Validate input
+		if recipient == None or len(recipient) == 0:
+			print("Invalid input, please try again.")
+
+		#Prompt user to input personal message they want to send
+		message = input("Please enter message you'd like to send to " + recipient + " : ")
+
+		#Validate user input for message
+		if message == None or len(message) == 0:
+			print("Invalid input, please try again.")
+
+		#Attempt sending message
+		response = self.send_request_to_server(11, [self._current_user, recipient, message])
+
+		if response == None: return
+		response = int(response[0])
+
 		#Check server errors
-		if type(response[0]) == str and int(response[0]) == 0:
-			print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
+		if response == 0:
+			print(self._current_user + " doesn't exist. Please create first.")
+			return 
+		if response == 1:
+			print(recipient + " doesn't exist. Please try again.")
 			return
 
-		if type(response[0]) == str and int(response[0]) == 1:
-			print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
+		#All checks passed, message was sent
+		print("Message to " + recipient + " was successfuly sent.")
 
-		if type(response[0]) == str and (int(response[0]) == 2 or int(response[0]) == 3):
-			print("Can't send message: join the room first.")
+	def view_personal_inbox(self):
+		"""
+		Function that fetches inbox for current user and displays it
+		Calls a server function, which returns a list:
+			[0] - user with given username doesn't exist on the system
+			[inbox] - list of users personal messages
+		"""
+
+		#Check that client is connected to a server
+		if self._connected == False:
+			print("Please connect to a server first!")
 			return
-	
-		#Print all members of a room
-		print("**************************************************************")
-		print("#", "Username")
-		for i in range(len(response)):
-			print(i + 1, response[i])
 
-		print("**************************************************************")
+		#Check that user is logged in
+		if self._current_user == None:
+			print("Please create user or login first!")
+			return 
+
+		#Get server response
+		response = self.send_request_to_server(12, [self._current_user])
+
+		if response == None: return
+
+		try:
+			if len(response) > 0:
+				if int(response) == 0:
+					print("Can't view inbox: " + self._current_user + " doesn't exist on the system.")
+					return
+			else:
+				raise
+		except:
+			if len(response) == 0:
+				print("Inbox is empty!")
+				return
+			else:
+				#Print all messaged from a room
+				print("**************************************************************")
+				for i in range(len(response)):
+					print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
+
+				print("**************************************************************")
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#

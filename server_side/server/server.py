@@ -33,14 +33,18 @@ class Server():
 		except socket.error as e:
 			print(str(e))
 
+		print("Press Ctrl+C to shutdown.")
 		print("Waiting for a connection...")
 		self._server_socket.listen(5)
 
-		while True:
-			Client, address = self._server_socket.accept()
-			print("Connected to: " + address[0] + ":" + str(address[1]))
-			start_new_thread(self.threaded_client, (Client, address))
-			self._threads += 1
+		try:
+			while True:
+				Client, address = self._server_socket.accept()
+				print("Connected to: " + address[0] + ":" + str(address[1]))
+				start_new_thread(self.threaded_client, (Client, address))
+				self._threads += 1
+		except KeyboardInterrupt:
+			print("\nShutdown on KeyboardInterrupt.\n")
 
 		self._server_socket.close()
 
@@ -108,6 +112,15 @@ class Server():
 		if(request[0] == 9): 
 			print(addr + " | show_room_messages : " + str(request[1]))
 			return self._show_room_messages(request[1][0], request[1][1])
+		if(request[0] == 10): 
+			print(addr + " | show_room_members : " + str(request[1]))
+			return self._show_room_members(request[1][0], request[1][1])
+		if(request[0] == 11): 
+			print(addr + " | _send_personal_message : " + str(request[1]))
+			return self._send_personal_message(request[1][0], request[1][1], request[1][2])
+		if(request[0] == 12): 
+			print(addr + " | _view_personal_inbox : " + str(request[1]))
+			return self._view_personal_inbox(request[1][0])
 		if(request[0] == 666): 
 			return 1
 
@@ -223,7 +236,7 @@ class Server():
 		user = self._find_user(username)
 
 		#Update user last room
-		if user._last_room == None && current_room != None:
+		if user._last_room == None and current_room != None:
 			user._last_room = current_room
 
 		return [user._last_room, self._room_names]
@@ -442,7 +455,7 @@ class Server():
 		user.last_room = room_name
 		return room._messages
 
-	def _view_room_members(self, username, room_name):
+	def _show_room_members(self, username, room_name):
 		"""
 		Function that returns room messages to the user who requested to view room messages
 
@@ -480,6 +493,59 @@ class Server():
 		#All checks passed, can send back messages
 		user.last_room = room_name
 		return room._usernames
+
+	def _send_personal_message(self, username, recipient, message):
+		"""
+		Function that sends personal message from one user to another: inputs messge into message list
+
+		Args:
+			username 	(String) - username of the user that attempts to send the message
+			recipient 	(String) - username of the user that will receive the message
+			message 	(String) - message that is meant to be sent
+
+		Returns:
+			[0] - user with given username doesn't exist on the system
+			[1] - user with recipient username doesn't exist on the system
+			[2] - successful message sent
+		"""
+
+		#Check that sender exists on the system
+		if not username in self._usernames:
+			return [0]
+
+		#Check that recipient exists on the system
+		if not recipient in self._usernames:
+			return [1]
+
+		#All checks passed, can send message
+		receiver = self._find_user(recipient)
+
+		time = datetime.datetime.now()
+		final_message = {"At": time, "From": username, "Message": message}
+		receiver._inbox.append(final_message)
+
+		return [2]
+
+	def _view_personal_inbox(self, username):
+		"""
+		Function fetches users inbox and sends it back to the user to view
+
+		Args:
+			username 	(String) - username of the user that attempts to view his inbox
+
+		Returns:
+			[0] - user with given username doesn't exist on the system
+			[inbox] - list of users personal messages
+		"""
+
+		#Check that user exists on the system
+		if not username in self._usernames:
+			return [0]
+
+		#All checks passed, can send back list of messages
+		user = self._find_user(username)
+
+		return user._inbox
 
 	#Helper functions
 	def _find_user(self, username):
