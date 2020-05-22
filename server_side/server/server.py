@@ -68,6 +68,7 @@ class Server():
 				connection.close()
 			else:
 				response = str(response)
+				
 			try:
 				connection.sendall(response.encode())
 			except OSError:

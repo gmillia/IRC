@@ -154,13 +154,8 @@ class Client():
 			[1] - successful user creation on the systemser
 		"""
 
-		#Check that client is connected
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		if self._current_user != None:
-			print("Please logout first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
 			return
 
 		#Prompt user for input
@@ -198,14 +193,8 @@ class Client():
 			[String] - successful login: return name of the last room used by user (can be None)
 		"""
 
-		#Check if connected to a server first
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check if not already logged in
-		if self._current_user != None:
-			print("Already logged in, logout first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
 			return
 
 		#Prompt user to input login info
@@ -238,14 +227,9 @@ class Client():
 		Function that doesn't communicate with server:
 		Checks for connection and current user existence, and clears local info, thus "logging out"
 		"""
-		#Check if not connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
 
-		#Check if logged in
-		if self._current_user == None:
-			print("Login first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
 
 		#All checks passed: can log user out: clear local info
@@ -262,15 +246,9 @@ class Client():
 			[1] - successful room creation
 		"""
 
-		#Check if connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
-
-		#Check if logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
 
 		#Prompt user to input name of the room to create
 		room_name = input("Enter new room name: ")
@@ -308,15 +286,9 @@ class Client():
 			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
-
-		#Check that client is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
 
 		#Send a request to a server to fetch all room names
 		response = self.send_request_to_server(4, [self._current_user, self._current_room])
@@ -351,15 +323,9 @@ class Client():
 			[2] - user successfully joined room
 		"""
 
-		#Check if client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
-
-		#Check of client is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
 
 		#Prompt user to enter name of the new room they want to join
 		room_name = input("Please enter name of the room to join: ")
@@ -402,19 +368,8 @@ class Client():
 			[4] - user succesfully left room
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check that client is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-
-		#Check that client is in the room currently (room to be left)
-		if self._current_room == None:
-			print("Please join or create room first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
 			return
 
 		#Send a request to a server for user to leave current room
@@ -453,19 +408,8 @@ class Client():
 			[4] - successfuly switched room
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check that client is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-
-		#Check that client is a participant of a room
-		if self._current_room == None:
-			print("Please join or create room first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
 
 		#Prompt user to input name of the room they want to switch to
@@ -513,19 +457,8 @@ class Client():
 			[4] - message successfuly sent
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check that client is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-
-		#Check that user is in a room
-		if self._current_room == None:
-			print("Please join or create room first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
 			return
 
 		#Prompt user to input a message to be sent to a room
@@ -572,19 +505,8 @@ class Client():
 			[room_messages] - list of room messages
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check that user is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-		
-		#Check that user is a room participant
-		if self._current_room == None:
-			print("Please join or create room first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -629,19 +551,8 @@ class Client():
 			[room_members] - list of room members
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
-			return
-
-		#Check that user is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
-		
-		#Check that user is a room participant
-		if self._current_room == None:
-			print("Please join or create room first.")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -684,15 +595,9 @@ class Client():
 			[2] - successful message sent
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
-
-		#Check that user is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
 
 		#Prompt user input for recipient name
 		recipient = input("Please enter username of the user you want to send message to: ")
@@ -733,15 +638,9 @@ class Client():
 			[inbox] - list of users personal messages
 		"""
 
-		#Check that client is connected to a server
-		if self._connected == False:
-			print("Please connect to a server first!")
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
 			return
-
-		#Check that user is logged in
-		if self._current_user == None:
-			print("Please create user or login first!")
-			return 
 
 		#Get server response
 		response = self.send_request_to_server(12, [self._current_user])
@@ -811,3 +710,65 @@ class Client():
 		#All checks passed: decode server response and transform into a list, then send back the list
 		response = eval(data.decode('utf-8'))
 		return response
+
+	def before_check(self, connected=True, logged_in=True, logged_out=False, have_room=False):
+		"""
+		Helper function that checks required checks before server side function can be called.
+		Not all functions need all checks, thus flags will specify which checks need to be performed
+
+		Args:
+			connected 		(Boolean) - specifies whether we need to check for connection (default = True)
+			logged_in 	 	(Boolean) - specifies whether we need to check if user is logged in (default = True)
+			logged_out 		(Boolean) - specifies whether we need to check if the user must be logged out (default = False)
+			have_room 	 	(Boolean) - specifies whether we need to check if user participates in room atm (default = False)
+
+		Returns:
+			True 	- when all checks passed
+			None 	- when check failed
+		"""
+
+		if connected == True and self._connected == False:
+			return self.not_connected_error()
+
+		if logged_in == True and self._current_user == None:
+			return self.not_logged_in_error()
+
+		if logged_out == True and self._current_user != None:
+			return self.not_logged_out_error()
+
+		if have_room == True and self._current_room == None:
+			return self.not_in_room_error()
+
+		return True
+
+	def not_connected_error(self):
+		"""
+		Helper function that displays error message when clients hasn't connected to server
+		"""
+
+		print("ERROR: please connect to server.")
+		return
+
+	def not_logged_in_error(self):
+		"""
+		Helper function that displays error message when clients hasn't logged in into account
+		"""
+
+		print("ERROR: please create account or login.")
+		return
+
+	def not_logged_out_error():
+		"""
+		Helper function that displays error message when client has a logged in user, whereas he needs to log out before performing some action 
+		"""
+
+		print("ERROR: please log out.")
+
+	def not_in_room_error(self):
+		"""
+		Helper function that displays error message when logged in user hasn't joined a room yet (without a room atm)
+		"""
+
+		print("ERROR: please create or join a room.")
+		return
+
