@@ -147,7 +147,7 @@ class Server():
 		"""
 
 		#Check username existance on the system
-		if not(username in self._usernames):
+		if not(username in self._usernames): 
 			return [0]
 
 		#Match user and password
