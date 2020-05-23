@@ -150,8 +150,7 @@ class Client():
 		"""
 		Function that creates a new user in the system.
 		Server response is an array that consists of one item: 
-			[0] - user already exists
-			[1] - successful user creation on the systemser
+			[OK] - successful user creation on the systemser
 		"""
 
 		#Perform before check
@@ -182,7 +181,6 @@ class Client():
 		"""
 		Function that logs user in (matches user with user on the system)
 		Server response is a list:
-			[0] - username doesn't exist on the system OR password doesn't match user
 			[String] - successful login: return name of the last room used by user (can be None)
 		"""
 
@@ -231,8 +229,7 @@ class Client():
 		"""
 		Function that creates new room on the system
 		Serer responds with a list consisting of just 1 item:
-			[0] - room already exists on the system
-			[1] - successful room creation
+			[OK] - successful room creation
 		"""
 
 		#Perform before check
@@ -242,7 +239,7 @@ class Client():
 		#Prompt user to input name of the room to create
 		room_name = input("Enter new room name: ")
 
-		if validate_user_input(room_name) != True:
+		if self.validate_user_input(room_name) != True:
 			return
 
 		#Send request to server to create new room
@@ -261,7 +258,6 @@ class Client():
 		Server responds with a list consisting either of 1 or 2 items:
 		When server returns a list with just 1 item, it means there was an error on the server side with the request 
 		When server returns a list with 2 items, it means successful request:
-			[0] - user doesn't exist on the system
 			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
 		"""
 
@@ -295,9 +291,7 @@ class Client():
 		"""
 		Function that lets user join new room and automatically switches user current room to this newly joined room
 		Server responds with a list consisting of 1 item:
-			[0] - room_name (room) doesn't exist on the system
-			[1] - user is already a participant of the room he wants to join
-			[2] - user successfully joined room
+			[OK] - user successfully joined room
 		"""
 
 		#Perform before check
@@ -324,11 +318,7 @@ class Client():
 		"""
 		Function that lets user leave current room
 		Server response consists of a list with 1 item:
-			[0] - room with room_name doesn't exist on the system
-			[1] - user with username doesn't exist on the system
-			[2] - room doesn't have user with username as a participant 
-			[3] - user doesn't have room with room_name in rooms that he participates in
-			[4] - user succesfully left room
+			[OK] - user succesfully left room
 		"""
 
 		#Perform before check
@@ -349,11 +339,7 @@ class Client():
 		"""
 		Function that lets user switch to a new room that he is a participant of
 		Server response is a list that consists of one item:
-			[0] - user with given username doesn't exist on the system
-			[1] - room with given room_name doesn't exist on the system
-			[2] - user with a givn username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
-			[4] - successfuly switched room
+			[OK] - successfuly switched room
 		"""
 
 		#Perform before check
@@ -380,11 +366,7 @@ class Client():
 		"""
 		Function that lets user send message to a room he is currently in
 		Server response is a list that consists of one item:
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
-			[4] - message successfuly sent
+			[OK] - message successfuly sent
 		"""
 
 		#Perform before check
@@ -410,10 +392,6 @@ class Client():
 		"""
 		Function that gets all the messaged from current user room and displays them to a user
 		Server response is a list that consists of 1 item:
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
 			[room_messages] - list of room messages
 		"""
 
@@ -443,10 +421,6 @@ class Client():
 		"""
 		Function that fetches all room users and displays it to the current user
 		Calls a server and gets a response in form of a list:
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
 			[room_members] - list of room members
 		"""
 
@@ -472,9 +446,7 @@ class Client():
 		"""
 		Function that lets user send personal message to another user
 		Calls server-side function that sends back response in form of a list:
-			[0] - user with given username doesn't exist on the system
-			[1] - user with recipient username doesn't exist on the system
-			[2] - successful message sent
+			[OK] - successful message sent
 		"""
 
 		#Perform before check
@@ -504,7 +476,6 @@ class Client():
 		"""
 		Function that fetches inbox for current user and displays it
 		Calls a server function, which returns a list:
-			[0] - user with given username doesn't exist on the system
 			[inbox] - list of users personal messages
 		"""
 
@@ -679,22 +650,17 @@ class Client():
 		if len(response) == 0:
 			return True
 
-		#Try to convert to int: will fail if item is not a number (in some cases data returned is list of strings)
+		#Try to convert to int: int is returned only on success
 		try:
-			r = int(response[0])
-
-			#Returns code 6 on success as an Integer, not as a dict
-			if r == 6:
+			r = str(response[0])
+			if r == "OK":
 				return True
 		except:
-			return True
-
-		#Only error dict contains code as a key, check for that:
-		try:
-			e = response[0]["code"]
-			print(e)
-		except:
-			return True
+			#Only error dict contains code as a key, check for that:
+			try:
+				e = response[0]["description"]
+			except:
+				return True
 
 		#Response is an error. Display it
 		print(response[0]["description"])
