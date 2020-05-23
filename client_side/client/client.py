@@ -134,13 +134,15 @@ class Client():
 		print(response)
 
 	def disconnect_from_server(self):
-		if self._client_socket != None: 
+		if self._connected == True or self._client_socket != None: 
 			self._client_socket.close()
 			self._client_socket = None
 			self._connected = False
 			self._current_user = None
 			self._current_room = None
 			print("Disconnected from the server.")
+		else:
+			print("ERROR: connect to the server first.")
 
 	##############################################################################################
 	#MENU HELPERS####################################################################MENU HELPERS#
@@ -652,6 +654,8 @@ class Client():
 
 		#Try to convert to int: int is returned only on success
 		try:
+			if response[0] == None:
+				return True
 			r = str(response[0])
 			if r == "OK":
 				return True
