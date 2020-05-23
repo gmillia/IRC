@@ -68,7 +68,7 @@ class Server():
 				connection.close()
 			else:
 				response = str(response)
-				
+
 			try:
 				connection.sendall(response.encode())
 			except OSError:
@@ -218,19 +218,21 @@ class Server():
 			username (String) - username of the user to be created
 			password (String) - password for the user to be created
 
-		Returns:
-			[0] - user already exists
-			[1] - successful user creation on the system
+		Returns (one of the following):
+			[1] - user with a given username already exists on the system
+			[6] - successful user creation on the system
 		"""
 
-		#Check if user with passed username doesn't exist on the system
-		if not (username in self._usernames):
-			new_user = User(username=username, password=password)	#create new user
-			self._users.append(new_user)							#append user to system user list
-			self._usernames.append(username)						#append username to system username list
-			return [1]
-		else: 
-			return [0]
+		#Perform checks
+		before_check = self.before_check(check_username=False, check_user_already_exists=True, check_room_name=False, check_room_already_exists=False, 
+			check_user_in_room=False, check_room_in_user=False, username=username, room_name=None)
+		if before_check != True:
+			return before_check
+
+		new_user = User(username=username, password=password)	#create new user
+		self._users.append(new_user)							#append user to system user list
+		self._usernames.append(username)						#append username to system username list
+		return [6]
 
 	def login(self, username, password):
 		"""
@@ -240,14 +242,15 @@ class Server():
 			username (String) - username of the user that tries to log in
 			password (String) - password for the user that tries to log in
 
-		Returns:
-			[0] - username doesn't exist on the system OR password doesn't match user
+		Returns (one of the following):
+			[0] - user with a given username doesn't exist on the system 
 			[String] - successful login: return name of the last room used by user (can be None)
 		"""
 
-		#Check username existence on the system
-		if not(username in self._usernames):
-			return [0]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=False, check_room_already_exists=False, 
+			check_user_in_room=False, check_room_in_user=False, username=username, room_name=None)
+		if before_check != True:
+			return before_check
 
 		#Match user and password
 		user = self._find_user(username)
@@ -257,7 +260,7 @@ class Server():
 		#All checks passed: return room last used by the user
 		return [user._last_room]
 
-	def create_new_room(self, room_name, owner):
+	def create_new_room(self, room_name, username):
 		"""
 		Function that creates new room on the system
 
@@ -265,24 +268,25 @@ class Server():
 			room_name (String) - name of the room to be created
 			owner (String) - username of the user that wants to create new room
 
-		Returns:
-			[0] - room already exists on the system
-			[1] - successful room creation
+		Returns (one of the following):
+			[3] - room with a given room_name already exists on the system
+			[6] - successful room creation
 		"""
 
-		#Check that room doesn't exist on the system yet
-		if not (room_name in self._room_names):
-			new_room = Room(name=room_name, owner=owner)	#create new Room object
-			user = self._find_user(owner)					#find user object
-			user._room_names.append(room_name)				#appends room name to the user room names
-			new_room._users.append(user)					#append user to list of user objects in room	
-			new_room._usernames.append(owner)				#append name to list of usernames in room
-			self._rooms.append(new_room)					#append to list of rooms on server
-			self._room_names.append(room_name)				#append to list of room names on server
-			user._last_room = room_name 					#update last room user interacted with
-			return [1]
-		else: 
-			return [0]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=False, check_room_already_exists=True, 
+			check_user_in_room=False, check_room_in_user=False, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
+
+		new_room = Room(name=room_name, owner=username)	#create new Room object
+		user = self._find_user(username)				#find user object
+		user._room_names.append(room_name)				#appends room name to the user room names
+		new_room._users.append(user)					#append user to list of user objects in room	
+		new_room._usernames.append(owner)				#append name to list of usernames in room
+		self._rooms.append(new_room)					#append to list of rooms on server
+		self._room_names.append(room_name)				#append to list of room names on server
+		user._last_room = room_name 					#update last room user interacted with
+		return [6]
 
 	def list_all_rooms(self, username, current_room):
 		"""
@@ -292,14 +296,15 @@ class Server():
 			username (String) - username of the user that wants to fetch all rooms
 			current_room (String) - room currently used by the user that wants to fetch all rooms
 
-		Returns:
-			[0] - user doesn't exist on the system
+		Returns (one of the following):
+			[0] - user with a given username doesn't exist on the system 
 			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
 		"""
 
-		#Check if user exists on the system
-		if not (username in self._usernames):
-			return [0]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=False, check_room_already_exists=False, 
+			check_user_in_room=False, check_room_in_user=False, username=username, room_name=None)
+		if before_check != True:
+			return before_check
 
 		#Find user object on the system
 		user = self._find_user(username)
@@ -318,22 +323,21 @@ class Server():
 			room_name (String) - name of the server that user wants to join
 			username (String) - username of the user that wants to join new room
 
-		Returns:
-			[0] - room_name (room) doesn't exist on the system
-			[1] - user is already a participant of the room he wants to join
-			[2] - user successfully joined room
+		Returns (one of the following):
+			[0] - user with a given username doesn't exist on the system 
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+			[6] - successful join
 		"""
 
-		#Check if room exists on the system
-		if not (room_name in self._room_names):
-			return [0]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Find Room object on the system
 		room = self._find_room(room_name)
-
-		#User already joined room
-		if username in room._usernames:
-			return [1]
 	
 		user = self._find_user(username)		#create new User object
 		room._users.append(user)				#append user to room users list
@@ -341,7 +345,7 @@ class Server():
 		user._rooms.append(room)				#append room to user rooms list
 		user._room_names.append(room_name)		#append room name to user room names
 		user._last_room = room_name 			#update user last room to room_name
-		return [2]
+		return [6]
 
 	def leave_room(self, room_name, username):
 		"""
@@ -352,35 +356,24 @@ class Server():
 			username (String) - username of the user that wants to leave room
 
 		Returns:
-			[0] - room with room_name doesn't exist on the system
-			[1] - user with username doesn't exist on the system
-			[2] - room doesn't have user with username as a participant 
-			[3] - user doesn't have room with room_name in rooms that he participates in
-			[4] - user successfully left room
+			[0] - user with a given username doesn't exist on the system 
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+			[6] - successful leaving
 
 		"""
 
-		#Check if room doesn't exist on the system
-		if not (room_name in self._room_names):
-			return [0]
-
-		#Check if username doesn't exist on the system
-		if not (username in self._usernames):
-			return [1]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Find Room object on the system
 		room = self._find_room(room_name)
-
-		#Check if user with username is in rooms usernames list
-		if  not (username in room._usernames):
-			return [2]
 		
 		#Find user object in the system
 		user = self._find_user(username)
-
-		#Check if user has room_name in his room_names list
-		if not (room_name in user._room_names):
-			return [3]
 
 		#All checks passed: can update info to leave
 		room._users.remove(user)				#remove user from rooms user list			
@@ -392,8 +385,8 @@ class Server():
 		if user._last_room == room_name: 
 			user._last_room = None
 
-		#Successful removal
-		return [4]
+		#Successful leaving
+		return [6]
 
 	def switch_room(self, username, room_name):
 		"""
@@ -403,39 +396,25 @@ class Server():
 			username (String) - username of the user that wants to switch rooms
 			room_name (String) - name of the room that user wants to switch to
 
-		Returns: 
-			[0] - user with given username doesn't exist on the system
-			[1] - room with given room_name doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
-			[4] - successfuly switched room
+		Returns (one of the following): 
+			[0] - user with a given username doesn't exist on the system 
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+			[6] - successfuly switched room
 		"""
 
-		#Check that user exists on the server
-		if not (username in self._usernames):
-			return [0]
-
-		#Check that room exists on the server
-		if not (room_name in self._room_names):
-			return [1]
-
-		#Find room
-		room = self._find_room(room_name)
-
-		#Check user in room
-		if not (username in room._usernames):
-			return [2]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Find user
 		user = self._find_user(username)
 
-		#Check if user participates in the room he wants to switch to
-		if not (room_name in user._room_names):
-			return [3]
-
 		#Update user info and return successful switch
 		user._last_room = room_name
-		return [4]
+		return [6]
 
 	def send_room_message(self, username, room_name, message):
 		"""
@@ -447,31 +426,21 @@ class Server():
 			message (String) - message user is trying to send to a room
 
 		Returns: 
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
-			[4] - message successfuly sent
+			[0] - user with a given username doesn't exist on the system (also when invalid login credentials, to hide either one)
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+			[6] - message successfuly sent
 		"""
-		#Check if such room exists
-		if not (room_name in self._room_names):
-			return [0]
 
-		#Check if user exists
-		if not (username in self._usernames):
-			return [1]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
 		user = self._find_user(username)
-
-		#Check that user is in the room in room side
-		if  not (username in room._usernames):
-			return [2]
-
-		#Check that user in the room in user side
-		if not (room_name in user._room_names):
-			return [3]
 
 		#Passed all checks, can actually send a message
 		user._last_room = room_name
@@ -480,7 +449,7 @@ class Server():
 
 		#Add message to room messages
 		room._messages.append(final_message)
-		return [4]
+		return [6]
 
 		#Send message to all room users
 		#Probably not needed - users will fetch messages from current room
@@ -493,32 +462,22 @@ class Server():
 			username (String) - username of the user that wants to switch rooms
 			room_name (String) - name of the room that user wants to switch to
 
-		Returns:
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
+		Returns (one of the following):
+			[0] - user with a given username doesn't exist on the system 
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
 			[room_messages] - list of room messages
 		"""
-		#Check if such room exists
-		if not (room_name in self._room_names):
-			return 0
 
-		#Check that room exists on the server
-		if not (room_name in self._room_names):
-			return [1]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
 		user = self._find_user(username)
-
-		#Check that user is in the room in room side
-		if  not (username in room._usernames):
-			return [2]
-
-		#Check that user in the room in user side
-		if not (room_name in user._room_names):
-			return [3]
 
 		#All checks passed, can send back messages
 		user.last_room = room_name
@@ -533,31 +492,21 @@ class Server():
 			room_name (String) - name of the room that user wants to switch to
 
 		Returns:
-			[0] - room with a given room_name doesn't exist on the system
-			[1] - user with a given username doesn't exist on the system
-			[2] - user with a given username doesn't exist in room users records
-			[3] - room with a given room_name doesn't exist in user rooms records
+			[0] - user with a given username doesn't exist on the system (also when invalid login credentials, to hide either one)
+			[2] - room with a given room_name doesn't exist on the system,
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
 			[room_members] - list of room members
 		"""
-		#Check if such room exists
-		if not (room_name in self._room_names):
-			return 0
 
-		#Check that room exists on the server
-		if not (room_name in self._room_names):
-			return [1]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=True, check_room_already_exists=False, 
+			check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+		if before_check != True:
+			return before_check
 
 		#Room exists: Find room object and User object
 		room = self._find_room(room_name)
 		user = self._find_user(username)
-
-		#Check that user is in the room in room side
-		if  not (username in room._usernames):
-			return [2]
-
-		#Check that user in the room in user side
-		if not (room_name in user._room_names):
-			return [3]
 
 		#All checks passed, can send back messages
 		user.last_room = room_name
@@ -572,19 +521,16 @@ class Server():
 			recipient 	(String) - username of the user that will receive the message
 			message 	(String) - message that is meant to be sent
 
-		Returns:
-			[0] - user with given username doesn't exist on the system
-			[1] - user with recipient username doesn't exist on the system
-			[2] - successful message sent
+		Returns (One of the following):
+			[0] - user with a given username doesn't exist on the system 
+			[6] - successful message sent
 		"""
 
-		#Check that sender exists on the system
-		if not username in self._usernames:
-			return [0]
-
-		#Check that recipient exists on the system
-		if not recipient in self._usernames:
-			return [1]
+		#Check for rcipient
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=False, check_room_already_exists=False, 
+			check_user_in_room=False, check_room_in_user=False, username=recipient, room_name=None)
+		if before_check != True:
+			return before_check
 
 		#All checks passed, can send message
 		receiver = self._find_user(recipient)
@@ -593,7 +539,7 @@ class Server():
 		final_message = {"At": time, "From": username, "Message": message}
 		receiver._inbox.append(final_message)
 
-		return [2]
+		return [6]
 
 	def view_personal_inbox(self, username):
 		"""
@@ -603,27 +549,103 @@ class Server():
 			username 	(String) - username of the user that attempts to view his inbox
 
 		Returns:
-			[0] - user with given username doesn't exist on the system
+			[0] - user with a given username doesn't exist on the system 
 			[inbox] - list of users personal messages
 		"""
 
-		#Check that user exists on the system
-		if not username in self._usernames:
-			return [0]
+		before_check = self.before_check(check_username=True, check_user_already_exists=False, check_room_name=False, check_room_already_exists=False, 
+			check_user_in_room=False, check_room_in_user=False, username=recipient, room_name=None)
+		if before_check != True:
+			return before_check
 
 		#All checks passed, can send back list of messages
 		user = self._find_user(username)
 
 		return user._inbox
 
-	#Helper functions
+	##############################################################################################
+	#HELPER FUNCTIONS############################################################HELPER FUNCTIONS#
+	##############################################################################################
+
 	def _find_user(self, username):
+		"""
+		Helper function that returns User object with a passed in username. Before checks make sure user exists
+
+		Args:
+			username 	(String) - username of the User object
+
+		Returns:
+			user 	(Object) - User object with a given username
+		"""
+
 		user = [x for x in self._users if x._username == username][0]
 		return user
 
 	def _find_room(self, room_name):
+		"""
+		Helper function that returns Room object with a passed in room_name. Before checks make sure room exists
+
+		Args:
+			room_name 	(String) - name of the Room object
+
+		Returns:
+			room 	(Object) - Room object with a given room_name
+		"""
 		room = [x for x in self._rooms if x._name == room_name][0]
 		return room
 
-	def _find_item_index(self, username, list):
-		return list.index(username)
+	def before_check(self, check_username=False, check_user_already_exists=False, check_room_name=False, check_room_already_exists=False, check_user_in_room=False, check_room_in_user=False, username=None, room_name=None):
+		"""
+		Helper function that provides a centralized error system
+		Performs checks and returns either a number that corresponds to certain error, or True if all checks pass
+
+		Args:
+			check_username 				(Boolean) - specifies whether to check if user with username exists on system
+			check_user_already_exists 	(Boolean) - specifies whether to check if user with username already exists on the system (for new user registration)
+			check_room_name 			(Boolean) - specifies whether to check if room with room_name exists on the system
+			check_room_already_exists 	(Boolean) - specifies whether to check if room with room_name already exists on the system (for new room registration)
+			check_user_in_room 			(Boolean) - specifies whether to check if room has a user with a given username
+			check_room_in_user 			(Boolean) - specifies whether to check if user has a room with a given room_name
+
+		Returns:
+			[0] - user with a given username doesn't exist on the system (also when invalid login credentials, to hide either one)
+			[1] - user with a given username already exists on the system
+			[2] - room with a given room_name doesn't exist on the system,
+			[3] - room with a given room_name already exists on the system
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+			True - all checks have passed
+		"""
+
+		#Check username
+		if check_username and not username in self._usernames:
+			print("ERROR: " + username + " doesn't exist on the system.")
+			return [0]
+
+		#Check alredy exists
+		if check_already_exists and username in self._usernames:
+			print("ERROR: " + username + " already exists on the system.")
+			return [1]
+
+		#Check room_name
+		if check_room_name and not room_name in self._room_names:
+			print("ERROR: " + room_name + " doesn't exist on the system.")
+			return [2]
+
+		if check_room_already_exists and room_name in self._room_names:
+			print("ERROR: " + room_name + " already exists on the system.")
+			return [3]
+
+		#Check user in room
+		if check_user_in_room:
+			room = self._find_room(room_name)
+			if not username in room._usernames:
+				return [4]
+
+		#Check room in user
+		if check_room_in_user:
+			user = self._find_user(username)
+			if not room_name in user._room_names:
+				return [5]
+
+		return True
