@@ -226,6 +226,7 @@ class Server():
 		#Perform checks
 		before_check = self.before_check(check_username=False, check_user_already_exists=True, check_room_name=False, check_room_already_exists=False, 
 			check_user_in_room=False, check_room_in_user=False, username=username, room_name=None)
+
 		if before_check != True:
 			return before_check
 
@@ -607,7 +608,7 @@ class Server():
 			check_user_in_room 			(Boolean) - specifies whether to check if room has a user with a given username
 			check_room_in_user 			(Boolean) - specifies whether to check if user has a room with a given room_name
 
-		Returns:
+		Returns [code]:
 			[0] - user with a given username doesn't exist on the system (also when invalid login credentials, to hide either one)
 			[1] - user with a given username already exists on the system
 			[2] - room with a given room_name doesn't exist on the system,
@@ -617,35 +618,39 @@ class Server():
 			True - all checks have passed
 		"""
 
+		print("Called before check")
+
 		#Check username
 		if check_username and not username in self._usernames:
 			print("ERROR: " + username + " doesn't exist on the system.")
-			return [0]
+			return [{"code": 0, "description": "ERROR: " + username + " doesn't exist on the system."}]
 
 		#Check alredy exists
-		if check_already_exists and username in self._usernames:
+		if check_user_already_exists and username in self._usernames:
 			print("ERROR: " + username + " already exists on the system.")
-			return [1]
+			return [{"code": 1, "description": "ERROR: " + username + " already exists on the system."}]
 
 		#Check room_name
 		if check_room_name and not room_name in self._room_names:
 			print("ERROR: " + room_name + " doesn't exist on the system.")
-			return [2]
+			return [{"code": 2, "description": "ERROR: " + room_name + " doesn't exist on the system."}]
 
 		if check_room_already_exists and room_name in self._room_names:
 			print("ERROR: " + room_name + " already exists on the system.")
-			return [3]
+			return [{"code": 3, "description": "ERROR: " + room_name + " already exists on the system."}]
 
 		#Check user in room
 		if check_user_in_room:
 			room = self._find_room(room_name)
 			if not username in room._usernames:
-				return [4]
+				print("ERROR: " + room_name + " doesn't have " + username + " as a participant.")
+				return [{"code": 4, "description": "ERROR: " + room_name + " doesn't have " + username + " as a participant."}]
 
 		#Check room in user
 		if check_room_in_user:
 			user = self._find_user(username)
 			if not room_name in user._room_names:
-				return [5]
+				print("ERROR: " + username + " doesn't participate in " + room_name)
+				return [{"code": 5, "description": "ERROR: " + username + " doesn't participate in " + room_name}]
 
 		return True

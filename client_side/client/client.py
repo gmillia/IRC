@@ -160,25 +160,18 @@ class Client():
 
 		#Prompt user for input
 		username = input("Enter new user username: ")
-		password = input("Enter new user password: ")
+		#Validate user input
+		if self.validate_user_input(username) != True:
+			return
 
-		#Validate input
-		if username == None or password == None or len(username) == 0 or len(password) == 0:
-			print("Invalid input, please try again!")
+		password = input("Enter new user password: ")
+		if self.validate_user_input(password) != True:
 			return
 
 		#Send request to the server to create new user on the system
 		response = self.send_request_to_server(1, [username, password])
 
-		#Validate not errored response on request
-		if response == None: return
-		
-		#Transform first item from response to integer
-		response = int(response[0])
-
-		#Check for error from server
-		if response == 0:
-			print("User " + username + " already exists!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: user created on the system: can update local info
@@ -197,24 +190,20 @@ class Client():
 		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
 			return
 
-		#Prompt user to input login info
-		username = input("Enter user username: ")
-		password = input("Enter user password: ")
-
+		#Prompt user for input
+		username = input("Enter new user username: ")
 		#Validate user input
-		if username == None or password == None or len(username) == 0 or len(password) == 0:
-			print("Invalid input, please try again!")
+		if self.validate_user_input(username) != True:
+			return
+
+		password = input("Enter new user password: ")
+		if self.validate_user_input(password) != True:
 			return
 
 		#Send request to server to log user in
 		response = self.send_request_to_server(2, [username, password])
 
-		#Validate not errored response on request
-		if response == None: return
-
-		#Check errors on login
-		if type(response[0]) == int and int(response[0]) == 0:
-			print("Username or password is invalid!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks have passed: user logged in: can update local info
@@ -253,23 +242,13 @@ class Client():
 		#Prompt user to input name of the room to create
 		room_name = input("Enter new room name: ")
 
-		#Validate user input
-		if room_name == None or len(room_name) == 0:
-			print("Invalid input, please try again!")
+		if validate_user_input(room_name) != True:
 			return
 
 		#Send request to server to create new room
 		response = self.send_request_to_server(3, [room_name, self._current_user])
 
-		#Check errored request
-		if response == None: return
-		
-		#Transform first item on the response list to an integer
-		response = int(response[0])
-
-		#Check server error
-		if response == 0:
-			print("Room " + room_name + " already exists!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: new room created on the system: can update local info
@@ -296,9 +275,7 @@ class Client():
 		#Check for errored request
 		if response == None: return
 
-		#Check if server returned list with 1 item: signifies some error
-		if len(response) == 1:
-			print("Login or create user first!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: update current room
@@ -330,27 +307,13 @@ class Client():
 		#Prompt user to enter name of the new room they want to join
 		room_name = input("Please enter name of the room to join: ")
 
-		#Validate used input
-		if room_name == None or len(room_name) == 0:
-			print("Invalid input, please try again!")
-			return 
+		if self.validate_user_input(room_name) != True:
+			return
 
 		#Send request to server to join new room
 		response = self.send_request_to_server(5, [room_name, self._current_user])
 
-		#Check errored request
-		if response == None: return
-
-		#Transform first item on server response to an integer
-		response = int(response[0])
-
-		#Check for server errors
-		if response == 0:
-			print("Room " + room_name + " doesn't exist. Create first!")
-			return
-		if response == 1:
-			print("You already participate in the room " + room_name + "!")
-			self._current_room = room_name
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: user joined new room: can update local info
@@ -375,22 +338,7 @@ class Client():
 		#Send a request to a server for user to leave current room
 		response = self.send_request_to_server(6, [self._current_room, self._current_user])
 
-		#Check errored request
-		if response == None: return
-
-		#Transform first item from server response to an integer
-		response = int(response[0])
-
-		#Check for sever errors
-		if response == 0:
-			print("Room " + self._current_room + " doesn't exist. Create first!")
-			return
-
-		if response == 1:
-			print("User " + self._current_user + " doesn't exist. Create first!")
-
-		if response == 2 or response == 3:
-			print("You can't leave room that you haven't joined. Join first!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: user Successfully left room: can update local info
@@ -415,31 +363,13 @@ class Client():
 		#Prompt user to input name of the room they want to switch to
 		new_room = input("Please enter room to go to: ")
 
-		#Validate user input
-		if new_room == None or len(new_room) == 0:
-			print("Invalid input, please try again!")
+		if self.validate_user_input(new_room) != True:
 			return
 
 		#Send request to a server to switch current room
 		response = self.send_request_to_server(7, [self._current_user, new_room])
 
-		#Check for errored request
-		if response == None: return
-
-		#Transform first item on response to be an integer
-		response = int(response[0])
-
-		#Check for server errors
-		if response == 0:
-			print(self._current_user + " doesn't exist. Please create user first!")
-			return
-
-		if response == 1:
-			print("Room " + new_room + " doesn't exist - create first!")
-			return
-
-		if response == 2 or response == 3:
-			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: room Successfully switched: can update local info
@@ -464,31 +394,13 @@ class Client():
 		#Prompt user to input a message to be sent to a room
 		message = input("Please enter message: ")
 
-		#Validate user input
-		if message == None or len(message) == 0:
-			print("Invalid input, please try again!")
-			return 
+		if self.validate_user_input(message) != True:
+			return
 
 		#Send request to server to send a message to a room
 		response = self.send_request_to_server(8, [self._current_user, self._current_room, message])
 
-		#Check errored request
-		if response == None: return
-		
-		#Transform first item on the server response list to be an integer
-		response = int(response[0])
-
-		#Check for server errors
-		if response == 0:
-			print("Can't send a message: " + self._current_room + " doesn't exist. Create or join first.")
-			return
-
-		if response == 1:
-			print("Can't send a message: " + self._current_user + " doesn't exist. Please create user first!")
-			return
-
-		if response == 2 or response == 3:
-			print(self._current_user + " doesn't participate in " + self._current_room + ". Please join first!")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed: display message
@@ -512,21 +424,8 @@ class Client():
 		#Send request to server to fetch all messaged from current room
 		response = self.send_request_to_server(9, [self._current_user, self._current_room])
 
-		#Check errored request
-		if response == None: return
-
-		#Check server errors: On successful message fetch server can send empty list (no messages in the room): check for that
-		if len(response) > 0:
-			if type(response[0]) == str and int(response[0]) == 0:
-				print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
-				return
-
-			if type(response[0]) == str and int(response[0]) == 1:
-				print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
-
-			if type(response[0]) == str and (int(response[0]) == 2 or int(response[0]) == 3):
-				print("Can't send message: join the room first.")
-				return
+		if self.after_check(response) != True:
+			return
 
 		#All checks passed: check if room doesn't have any messages
 		if len(response) == 0:
@@ -558,33 +457,16 @@ class Client():
 		#Send request to server to fetch all messaged from current room
 		response = self.send_request_to_server(10, [self._current_user, self._current_room])
 
-		#Check errored request
-		if response == None: return
+		if self.after_check(response) != True:
+			return
 
-		#When trying to convert to int, it will fail when response returned list with users (e.g.: can't convert John to int), and except will catch it (meaning valid response)
-		try:
-			#Check server errors
-			if len(response) > 0:
-				if int(response[0]) == 0:
-					print("Can't view messages: " + self._current_room + " doesn't exist. Create or join first.")
-					return
+		#Print all members of a room
+		print("**************************************************************")
+		print("#", "Username")
+		for i in range(len(response)):
+			print(i + 1, response[i])
 
-				if int(response[0]) == 1:
-					print("Can't view messages: " + self._current_user + " doesn't exist. Create or login first.")
-
-				if int(response[0]) == 2 or int(response[0]) == 3:
-					print("Can't send message: join the room first.")
-					return
-			else:
-				raise 
-		except:
-			#Print all members of a room
-			print("**************************************************************")
-			print("#", "Username")
-			for i in range(len(response)):
-				print(i + 1, response[i])
-
-			print("**************************************************************")
+		print("**************************************************************")
 
 	def send_personal_message(self):
 		"""
@@ -601,30 +483,18 @@ class Client():
 
 		#Prompt user input for recipient name
 		recipient = input("Please enter username of the user you want to send message to: ")
-
-		#Validate input
-		if recipient == None or len(recipient) == 0:
-			print("Invalid input, please try again.")
+		if self.validate_user_input(recipient) != True:
+			return
 
 		#Prompt user to input personal message they want to send
 		message = input("Please enter message you'd like to send to " + recipient + " : ")
-
-		#Validate user input for message
-		if message == None or len(message) == 0:
-			print("Invalid input, please try again.")
+		if self.validate_user_input(message) != True:
+			return
 
 		#Attempt sending message
 		response = self.send_request_to_server(11, [self._current_user, recipient, message])
 
-		if response == None: return
-		response = int(response[0])
-
-		#Check server errors
-		if response == 0:
-			print(self._current_user + " doesn't exist. Please create first.")
-			return 
-		if response == 1:
-			print(recipient + " doesn't exist. Please try again.")
+		if self.after_check(response) != True:
 			return
 
 		#All checks passed, message was sent
@@ -645,26 +515,19 @@ class Client():
 		#Get server response
 		response = self.send_request_to_server(12, [self._current_user])
 
-		if response == None: return
+		if self.after_check(response) != True:
+			return
 
-		try:
-			if len(response) > 0:
-				if int(response) == 0:
-					print("Can't view inbox: " + self._current_user + " doesn't exist on the system.")
-					return
-			else:
-				raise
-		except:
-			if len(response) == 0:
-				print("Inbox is empty!")
-				return
-			else:
-				#Print all messaged from a room
-				print("**************************************************************")
-				for i in range(len(response)):
-					print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
+		if len(response) == 0:
+			print("Inbox is empty!")
+			return
 
-				print("**************************************************************")
+		#Print all messaged from a room
+		print("**************************************************************")
+		for i in range(len(response)):
+			print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
+
+		print("**************************************************************")
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
@@ -757,7 +620,7 @@ class Client():
 		print("ERROR: please create account or login.")
 		return
 
-	def not_logged_out_error():
+	def not_logged_out_error(self):
 		"""
 		Helper function that displays error message when client has a logged in user, whereas he needs to log out before performing some action 
 		"""
@@ -771,4 +634,69 @@ class Client():
 
 		print("ERROR: please create or join a room.")
 		return
+
+	def validate_user_input(self, user_input):
+		"""
+		Helper function that validates user input 
+
+		Args:
+			user_input (String) - user entered input (can be empty)
+
+		Returns:
+			True - when all checks pass
+			None - when checks fail (will display message)
+		"""
+
+		if type(user_input) == None or len(user_input) == 0:
+			print("ERROR: invalid input. Please try again.")
+			return
+
+		return True
+
+	def after_check(self, response):
+		"""
+		Helper function that performs checks on response from the server
+		
+		Args:
+			response (List) - list containing server response (either error codes or actual data)
+		Returns:
+			True - all checks pass, no errors
+			None - displays error messages and returns None when errors are detected
+
+		Error Codes:
+			[0] - user with a given username doesn't exist on the system 
+			[1] - user with a given username already exists on the system
+			[2] - room with a given room_name doesn't exist on the system,
+			[3] - room with a given room_name already exists on the system
+			[4] - room doesn't have a user with a given username
+			[5] - user doesn't have (doesn't participate in) a room with a given room_name
+		"""
+		#None signifies some error while requesting occured
+		if response == None:
+			return
+
+		#Emtpy list is only returned when operation has been performed successfuly
+		if len(response) == 0:
+			return True
+
+		#Try to convert to int: will fail if item is not a number (in some cases data returned is list of strings)
+		try:
+			r = int(response[0])
+
+			#Returns code 6 on success as an Integer, not as a dict
+			if r == 6:
+				return True
+		except:
+			return True
+
+		#Only error dict contains code as a key, check for that:
+		try:
+			e = response[0]["code"]
+			print(e)
+		except:
+			return True
+
+		#Response is an error. Display it
+		print(response[0]["description"])
+
 
