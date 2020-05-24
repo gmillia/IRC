@@ -18,22 +18,22 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ## User menu
 
-0. Connect to a server 				
-1. Disconnect from a server 		
-2. Create new user 					
-3. Login to existing account 
-4. Logout
-5. Create new room
-6. List all rooms
-7. Join new room
-8. Leave room
-9. Switch room
-10. Send message to room
-11. View room messages
-12. View room members
-13. Send personal message
-14. View personal inbox
-15. Exit
+0. `Connect to a server` 				
+1. `Disconnect from a server` 		
+2. `Create new user` 					
+3. `Login to existing account` 
+4. `Logout`
+5. `Create new room`
+6. `List all rooms`
+7. `Join new room`
+8. `Leave room`
+9. `Switch room`
+10. `Send message to room`
+11. `View room messages`
+12. `View room members`
+13. `Send personal message`
+14. `View personal inbox`
+15. `Exit`
 
 ---
 
@@ -41,8 +41,8 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 1. Without connecting to server, all other menu choices will result in error, and menu will be displayed again.
 2. Without valid user account, all other menu choices will result in error, and menu will be displayed again.
-3. While logged in, user can perform user specific actions, such as: [1. Disconnect from a server, 4. Logout, 5. Create new room, 6. List all rooms, 7. Join new room, 9. Switch room, 13. Send personal message, 14. View personal inbox]
-4. While user is a participant of a room, in addition to user specific actions, user can perform room specific actions, such as: [8. Leave room, 10. Send message to room, 11. View room messages, 12. View room members]
+3. While logged in, user can perform user specific actions, such as: [Disconnect from a server, Logout, Create new room, List all rooms, Join new room, Switch room, Send personal message, View personal inbox]
+4. While user is a participant of a room, in addition to user specific actions, user can perform room specific actions, such as: [Leave room, Send message to room, View room messages, View room members]
 
 ---
 
