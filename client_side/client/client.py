@@ -156,7 +156,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
+		if self.before_check(connected=True, logged_out=True) != True: 
 			return
 
 		#Prompt user for input
@@ -187,7 +187,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
+		if self.before_check(connected=True, logged_out=True) != True: 
 			return
 
 		#Prompt user for input
@@ -218,7 +218,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#All checks passed: can log user out: clear local info
@@ -235,7 +235,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to input name of the room to create
@@ -264,7 +264,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Send a request to a server to fetch all room names
@@ -297,7 +297,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to enter name of the new room they want to join
@@ -324,7 +324,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send a request to a server for user to leave current room
@@ -345,7 +345,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to input name of the room they want to switch to
@@ -372,7 +372,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Prompt user to input a message to be sent to a room
@@ -398,7 +398,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -427,7 +427,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -452,7 +452,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user input for recipient name
@@ -482,7 +482,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Get server response
@@ -547,7 +547,7 @@ class Client():
 		response = eval(data.decode('utf-8'))
 		return response
 
-	def before_check(self, connected=True, logged_in=True, logged_out=False, have_room=False):
+	def before_check(self, connected=False, logged_in=False, logged_out=False, have_room=False):
 		"""
 		Helper function that checks required checks before server side function can be called.
 		Not all functions need all checks, thus flags will specify which checks need to be performed
