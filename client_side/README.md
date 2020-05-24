@@ -157,5 +157,6 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ### 15. Exit
 **Purpose**: Let client exist the program (and close connection with a server)
+
 **NOTE**: If server instance isn't closed, and during current session client made a user account 
 and performed some user/room specific actions, client will be able to login and view all the progress.
