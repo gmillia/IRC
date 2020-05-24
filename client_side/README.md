@@ -18,21 +18,23 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ---
 
-## 0. Connect to a server  	
+### 0. Connect to a server  	
 **Purpose**: Let client connect to a server (establish connection with the server).
 
 **Errors**:
 - When client is already connected and attempts to connect again. 
 ---
 
-## 1. `Disconnect from a server` 	
+#### 1. Disconnect from a server 	
 **Purpose**: Let client disconnect from a server (close connection with the server).
+
 **Errors**:
 - When client isn't connected and attempts to disconnect. 
 ---
 
-## 2. `Create new user` 	
+## 2. Create new user 	
 **Purpose**: Let client create new user account on the system.
+
 **Errors**:
 - When client isn't connected to a server.
 - When client is already signed-in into some user account.
@@ -40,71 +42,84 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 - When user with a given username already exists on the system (server).
 ---
 
-## 3. `Login to existing account` 
+## 3. Login to existing account 
 **Purpose**: Let client login to an existing user account.
+
 **Errors**:
 - When client isn't connected to a server.
 - When client is already signed-in into some user account.
 - When user with a given username doesn't exist on the system (server) OR username and password don't match up.
 ---
 
-## 4. `Logout`
+## 4. Logout
 **Purpose**: Let user logout of current user account
+
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
 ---
 
-## 5. `Create new room`
+## 5. Create new room
 **Purpose**: Let user 
+
 **Errors**:
 ---
 
-## 6. `List all rooms`
+## 6. List all rooms
 **Purpose**:
+
 **Errors**:
 ---
 
-## 7. `Join new room`
+## 7. Join new room
 **Purpose**:
+
 **Errors**:
 ---
 
-## 8. `Leave room`
+## 8. Leave room
 **Purpose**:
+
 **Errors**:
 ---
 
-## 9. `Switch room`
+## 9. Switch room
 **Purpose**:
+
 **Errors**:
 ---
 
-## 10. `Send message to room`
+## 10. Send message to room
 **Purpose**:
+
 **Errors**:
 ---
 
-## 11. `View room messages`
+## 11. View room messages
 **Purpose**:
+
 **Errors**:
 ---
 
-## 12. `View room members`
+## 12. View room members
 **Purpose**:
+
 **Errors**:
 ---
 
-## 13. `Send personal message`
+## 13. Send personal message
 **Purpose**:
+
 **Errors**:
 ---
 
-## 14. `View personal inbox`
+## 14. View personal inbox
 **Purpose**:
+
 **Errors**:
 ---
 
-## 15. `Exit`
+## 15. Exit
 **Purpose**:
+
 **Errors**:
