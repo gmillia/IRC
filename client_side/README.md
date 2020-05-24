@@ -8,7 +8,7 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ## Start
 
-Simply run `python3 main.py`
+Simply run: `python3 main.py`
 
 ---
 
