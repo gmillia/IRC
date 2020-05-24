@@ -148,7 +148,7 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 ---
 
 ### 14. View personal inbox
-**Purpose**:
+**Purpose**: Let user view all the messaged other users sent him (himself included)
 
 **Errors**:
 - When client isn't connected to a server.
