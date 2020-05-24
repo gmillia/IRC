@@ -18,8 +18,9 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ---
 
-## 0. `Connect to a server`  	
+## 0. Connect to a server  	
 **Purpose**: Let client connect to a server (establish connection with the server).
+
 **Errors**:
 - When client is already connected and attempts to connect again. 
 ---
