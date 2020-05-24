@@ -99,43 +99,52 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 ---
 
 ### 9. Switch room
-**Purpose**:
+**Purpose**: Let user switch their current room.
 
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+- When user inputs invalid information for a room they want to switch too.
+- When room that user wants to switch to doesn't exist on the system (server).
+- When user is not a participant of the room they want to switch to.
 ---
 
 ### 10. Send message to room
-**Purpose**:
+**Purpose**: Let user send a public room message.
 
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+- When user isn't a participant of a room (current room = None)
+- When user inputs invalid information for a message they want to send.
 ---
 
 ### 11. View room messages
-**Purpose**:
+**Purpose**: Let user view all messages in the room (users current room).
 
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+- When user isn't a participant of a room (current room = None)
 ---
 
 ### 12. View room members
-**Purpose**:
+**Purpose**: Let user view all members of a room (users current room).
 
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+- When user isn't a participant of a room (current room = None)
 ---
 
 ### 13. Send personal message
-**Purpose**:
+**Purpose**: Let user send a personal message to another user
 
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+- When user inputs invalid information for either user they want to send message to OR message.
+- When recipient user with a supplied username doesn't exist on the system (server).
 ---
 
 ### 14. View personal inbox
@@ -147,8 +156,6 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 ---
 
 ### 15. Exit
-**Purpose**:
-- When client isn't connected to a server.
-- When client isn't logged-in into some user account.
-
-**Errors**:
+**Purpose**: Let client exist the program (and close connection with a server)
+**NOTE**: If server instance isn't closed, and during current session client made a user account 
+and performed some user/room specific actions, client will be able to login and view all the progress.
