@@ -6,6 +6,12 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 ---
 
+## Start
+
+Simply run `python3 main.py`
+
+---
+
 ## Specs
 
 > **NOTE**: On the client_side no actual information is stored. Client keeps track current user (user that is logged-in into the system) and users room. All information is stored on the server_side. Thus, when user wants to perform user specific actions, they must be logged-in into an existing user account. Also, when user wants to perform room specific action (e.g.: leave room or send room message), they **must** currently be a participant of that room (current room can be seen above menu).
