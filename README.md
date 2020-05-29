@@ -52,4 +52,5 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 ## Docs
 
 Navigate to `client_side/` to view more information about user menu options.
+
 Navigate to `server_side/` to view more information about server functions.
