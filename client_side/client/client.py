@@ -193,12 +193,12 @@ class Client():
 			return
 
 		#Prompt user for input
-		username = input("Enter new user username: ")
+		username = input("Enter username: ")
 		#Validate user input
 		if self.validate_user_input(username) != True:
 			return
 
-		password = input("Enter new user password: ")
+		password = input("Enter password: ")
 		if self.validate_user_input(password) != True:
 			return
 
@@ -524,7 +524,7 @@ class Client():
 		if self.after_check(response) != True:
 			return
 
-		print("Message was sent to: " + response)
+		print("Message was sent to: " + '[%s]' % ', '.join(map(str, response)))
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
@@ -679,7 +679,7 @@ class Client():
 				return True
 		except:
 			pass
-			
+
 		#Only error dict contains code as a key, check for that:
 		try:
 			e = response[0]["description"]

@@ -232,7 +232,7 @@ class Server():
 		if(request[0] == 13): 
 			try:
 				print(addr + " | send_all_room_message : " + str(request[1]))
-				result = self.send_all_room_message(request[1][0])
+				result = self.send_all_room_message(request[1][0], request[1][1])
 				print(addr + " | send_all_room_message | result | " + str(result))
 				return result
 			except:
@@ -575,7 +575,7 @@ class Server():
 
 		sent_to = []
 
-		before_check = self.before_check(check_username=True)
+		before_check = self.before_check(check_username=True, username=username)
 		if before_check != True:
 			return before_check
 
@@ -587,7 +587,9 @@ class Server():
 				return before_check
 
 			room = self._find_room(room_name)
-			room._messages.append(message)
+			time = datetime.datetime.now()
+			final_message = {"At": time, "From": username, "Message": message}
+			room._messages.append(final_message)
 			sent_to.append(room_name)
 
 		return sent_to
