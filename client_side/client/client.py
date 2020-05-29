@@ -36,6 +36,7 @@ class Client():
 			_Option("View room members", self.view_room_members),
 			_Option("Send personal message", self.send_personal_message),
 			_Option("View personal inbox", self.view_personal_inbox),
+			_Option("Send message to all rooms", self.send_all_room_message),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -54,9 +55,9 @@ class Client():
 			else:
 				msg = " ".join([str(title), "[User: " + self._current_user + " | Room: " + str(self._current_room) + "] choose what you'd like to do:"])
 
-			print()
+			print("---------------------------------------------")
 			print(msg)
-			print()
+			print("---------------------------------------------")
 			print()
 			for i in range(len(options)):
 				print(str(i) + ": " + options[i].msg)
@@ -69,7 +70,7 @@ class Client():
 				option = 0
 
 			if options[option].func_pointer() == "Exit":
-				self.disconnect_from_server()
+				self.disconnect_from_server(exit=True)
 				should_exit = True
 
 	def _get_menu_option(self, min_value, max_value, cli_symbol="> "):
@@ -133,9 +134,10 @@ class Client():
 		response = data.decode('utf-8')
 		print(response)
 
-	def disconnect_from_server(self):
-		if self._connected == True or self._client_socket != None: 
-			self._client_socket.close()
+	def disconnect_from_server(self, exit=False):
+		if self._connected == True or self._client_socket != None or exit == True: 
+			if self._client_socket != None:
+				self._client_socket.close()
 			self._client_socket = None
 			self._connected = False
 			self._current_user = None
@@ -502,6 +504,28 @@ class Client():
 
 		print("**************************************************************")
 
+	def send_all_room_message(self):
+		"""
+		Function sends message to all rooms that user participates in.
+		Fetches all users rooms, and sends message to each one
+		"""
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input personal message they want to send
+		message = input("Please enter message you'd like to send: ")
+		if self.validate_user_input(message) != True:
+			return
+
+		#Get server response
+		response = self.send_request_to_server(13, [self._current_user, message])
+
+		if self.after_check(response) != True:
+			return
+
+		print("Message was sent to: " + response)
+
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
 	##############################################################################################
@@ -636,13 +660,6 @@ class Client():
 			True - all checks pass, no errors
 			None - displays error messages and returns None when errors are detected
 
-		Error Codes:
-			[0] - user with a given username doesn't exist on the system 
-			[1] - user with a given username already exists on the system
-			[2] - room with a given room_name doesn't exist on the system,
-			[3] - room with a given room_name already exists on the system
-			[4] - room doesn't have a user with a given username
-			[5] - user doesn't have (doesn't participate in) a room with a given room_name
 		"""
 		#None signifies some error while requesting occured
 		if response == None:
@@ -652,19 +669,24 @@ class Client():
 		if len(response) == 0:
 			return True
 
-		#Try to convert to int: int is returned only on success
-		try:
-			if response[0] == None:
+		if response[0] == None:
 				return True
+
+		#Try some checks
+		try:
 			r = str(response[0])
 			if r == "OK":
 				return True
 		except:
-			#Only error dict contains code as a key, check for that:
-			try:
-				e = response[0]["description"]
-			except:
-				return True
+			pass
+			
+		#Only error dict contains code as a key, check for that:
+		try:
+			e = response[0]["description"]
+		except TypeError:
+			return True
+		except:
+			return True
 
 		#Response is an error. Display it
 		print(response[0]["description"])

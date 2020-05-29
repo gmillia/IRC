@@ -229,6 +229,16 @@ class Server():
 				print(addr + " | view_personal_inbox | ERROR")
 				return
 
+		if(request[0] == 13): 
+			try:
+				print(addr + " | send_all_room_message : " + str(request[1]))
+				result = self.send_all_room_message(request[1][0])
+				print(addr + " | send_all_room_message | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
 		if(request[0] == 666): 
 			return 1
 
@@ -550,6 +560,38 @@ class Server():
 		user = self._find_user(username)
 
 		return user._inbox
+
+	def send_all_room_message(self, username, message):
+		"""
+		Function puts a user message into all rooms that user is a participant of
+
+		Args: 
+			username 	(String) - username of the user that wants to send the message
+			message 	(String) - message user wants to send to all the rooms
+
+		Returns:
+			["OK"] - successful message sent
+		"""
+
+		sent_to = []
+
+		before_check = self.before_check(check_username=True)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in user._room_names:
+			before_check = self.before_check(check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+			if before_check != True:
+				return before_check
+
+			room = self._find_room(room_name)
+			room._messages.append(message)
+			sent_to.append(room_name)
+
+		return sent_to
+					
 
 	##############################################################################################
 	#HELPER FUNCTIONS############################################################HELPER FUNCTIONS#
