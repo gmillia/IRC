@@ -540,12 +540,12 @@ class Client():
 			return
 
 		#Prompt user to input rooms they want to send message to
-		room_names = input("Please enter room names (separated by space): ")
+		room_names = input("Please enter room names (separated by comma): ")
 		if self.validate_user_input(room_names) != True:
 			return
 
-		#Create list from a string
-		room_names = room_names.split()
+		#Reformat to remove spaces between commas if any
+		room_names = [x.strip() for x in room_names.split(',')]
 
 		#Prompt user to input message they want to send
 		message = input("Please enter message you'd like to send: ")
@@ -574,12 +574,12 @@ class Client():
 			return
 
 		#Prompt user to input rooms they want to send message to
-		room_names = input("Please enter room names (separated by space): ")
+		room_names = input("Please enter room names (separated by comma): ")
 		if self.validate_user_input(room_names) != True:
 			return
 
-		#Create list from a string
-		room_names = room_names.split()
+		#Reformat to remove spaces between commas if any
+		room_names = [x.strip() for x in room_names.split(',')]
 
 		#Get server response: No need to do after check, errors will be displayed as failed joins
 		response = self.send_request_to_server(15, [self._current_user, room_names])
