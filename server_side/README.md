@@ -145,7 +145,7 @@ Simply run: `python3 main.py`
 - When user doesn't participate in the room.
 ---
 
-### 17. Join selected rooms
+### - Join selected rooms
 **Purpose**: Let user join selected rooms. Updates current room to the rooms joined last
 
 **Errors**:
