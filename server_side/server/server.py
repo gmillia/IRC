@@ -304,7 +304,7 @@ class Server():
 		#Match user and password
 		user = self._find_user(username)
 		if user._password != password:
-			return [0]
+			return [{"description": "ERROR: Invalid username or password."}]
 
 		#All checks passed: return room last used by the user
 		return [user._last_room]
@@ -547,7 +547,12 @@ class Server():
 			[OK] - successful message sent
 		"""
 
-		#Check for rcipient
+		#Check for sender
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		#Check for recipient
 		before_check = self.before_check(check_username=True, username=recipient)
 		if before_check != True:
 			return before_check

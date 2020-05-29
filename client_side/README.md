@@ -48,7 +48,7 @@ Simply run: `python3 main.py`
 - When user with a given username already exists on the system (server).
 ---
 
-### 3. Login to existing account 
+### 3. Login to an existing account 
 **Purpose**: Let client login to an existing user account.
 
 **Errors**:

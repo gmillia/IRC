@@ -24,7 +24,7 @@ class Client():
 			_Option("Connect to a server.", self.attempt_connect_to_server),
 			_Option("Disconnect from a server.", self.disconnect_from_server),
 			_Option("Create new user.", self.create_new_user),
-			_Option("Login to existing account.", self.login),
+			_Option("Login to an existing account.", self.login),
 			_Option("Logout", self.logout),
 			_Option("Create new room.", self.create_new_room),
 			_Option("List all rooms.", self.list_all_rooms),
