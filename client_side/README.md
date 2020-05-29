@@ -159,6 +159,7 @@ Simply run: `python3 main.py`
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+---
 
 ### 15. Send message to all rooms
 **Purpose**: Let user send message to all rooms that he is a participant of
