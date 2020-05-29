@@ -159,9 +159,16 @@ Simply run: `python3 main.py`
 **Errors**:
 - When client isn't connected to a server.
 - When client isn't logged-in into some user account.
+
+### 15. Send message to all rooms
+**Purpose**: Let user send message to all rooms that he is a participant of
+
+**Errors**:
+- When client isn't connected to a server.
+- When client isn't logged-in into some user account.
 ---
 
-### 15. Exit
+### 16. Exit
 **Purpose**: Let client exist the program (and close connection with a server)
 
 **NOTE**: If server instance isn't closed, and during current session client made a user account 
