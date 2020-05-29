@@ -44,8 +44,8 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 
 1. Without connecting to server, all other menu choices will result in error, and menu will be displayed again.
 2. Without valid user account, all other menu choices will result in error, and menu will be displayed again.
-3. While logged in, user can perform user specific actions, such as: [Disconnect from a server, Logout, Create new room, List all rooms, Join new room, Switch room, Send personal message, View personal inbox]
-4. While user is a participant of a room, in addition to user specific actions, user can perform room specific actions, such as: [Leave room, Send message to room, View room messages, View room members]
+3. While logged in, user can perform user specific actions
+4. While user is a participant of a room, in addition to user specific actions, user can perform room specific actions
 
 ---
 
