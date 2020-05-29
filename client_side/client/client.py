@@ -38,6 +38,7 @@ class Client():
 			_Option("View personal inbox", self.view_personal_inbox),
 			_Option("Send message to all rooms", self.send_all_room_message),
 			_Option("Send message to selected rooms", self.send_message_to_selected_rooms),
+			_Option("Join selected rooms", self.join_selected_rooms),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -559,6 +560,38 @@ class Client():
 
 		if len(response[1]) > 0:
 			print("Message FAILED to be sent to: " + '[%s]' % ', '.join(map(str, response[1])))
+
+	def join_selected_rooms(self):
+		"""
+		Function that lets user to join multiple selected rooms
+		Lets user type in room names of the rooms they want to join.
+		Calls server function that lets them join.
+		Server function returns a list of successfuly joined rooms, and failed rooms
+		"""
+
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input rooms they want to send message to
+		room_names = input("Please enter room names (separated by space): ")
+		if self.validate_user_input(room_names) != True:
+			return
+
+		#Create list from a string
+		room_names = room_names.split()
+
+		#Get server response: No need to do after check, errors will be displayed as failed joins
+		response = self.send_request_to_server(15, [self._current_user, room_names])
+
+		if len(response[0]) > 0:
+			print("Successfuly joined: " + '[%s]' % ', '.join(map(str, response[0])))
+			#update current room to last joined one
+			self._current_room = response[0][-1]
+
+		if len(response[1]) > 0:
+			print("FAILED to join: " + '[%s]' % ', '.join(map(str, response[1])))
+
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#

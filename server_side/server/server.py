@@ -249,6 +249,16 @@ class Server():
 				print(addr + " | send_all_room_message | ERROR")
 				return
 
+		if(request[0] == 15): 
+			try:
+				print(addr + " | join_selected_rooms : " + str(request[1]))
+				result = self.join_selected_rooms(request[1][0], request[1][1])
+				print(addr + " | join_selected_rooms | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
 		if(request[0] == 666): 
 			return 1
 
@@ -612,6 +622,10 @@ class Server():
 			username 	(String) - username of the user that wants to send the message
 			room_names 	(List) 	 - room names to which message should be sent
 			message 	(String) - message that needs to be sent to the rooms
+
+		Retuns:
+			sent_to 	(List) - names of the rooms to which message was successfuly sent
+			failed 		(List) - names of the rooms to which message failed to be sent
 		"""
 
 		sent_to = []
@@ -635,7 +649,39 @@ class Server():
 				sent_to.append(room_name)
 
 		return [sent_to, failed]
-					
+
+	def join_selected_rooms(self, username, room_names):
+		"""
+		Function that lets user join multiple rooms
+
+		Args:
+			username 	(String) - username of the user that wants to join rooms
+			room_names 	(List)   - names of the rooms user is attemptin to join
+
+		Returns:
+			joined 	(List) - names of the rooms that user successfuly joined
+			failed 	(List) - names of the rooms user failed to join
+		"""
+
+		joined = []
+		failed = []
+		
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in room_names:
+			result = self.join_new_room(room_name, username)
+
+			if result[0] == "OK":
+				joined.append(room_name)
+			else:
+				failed.append(room_name)
+
+		user._last_room = joined[-1]  # update last user room
+		return [joined, failed]	
 
 	##############################################################################################
 	#HELPER FUNCTIONS############################################################HELPER FUNCTIONS#
