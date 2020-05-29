@@ -37,6 +37,7 @@ class Client():
 			_Option("Send personal message", self.send_personal_message),
 			_Option("View personal inbox", self.view_personal_inbox),
 			_Option("Send message to all rooms", self.send_all_room_message),
+			_Option("Send message to selected rooms", self.send_message_to_selected_rooms),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -513,7 +514,7 @@ class Client():
 		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
-		#Prompt user to input personal message they want to send
+		#Prompt user to input message they want to send
 		message = input("Please enter message you'd like to send: ")
 		if self.validate_user_input(message) != True:
 			return
@@ -525,6 +526,39 @@ class Client():
 			return
 
 		print("Message was sent to: " + '[%s]' % ', '.join(map(str, response)))
+
+	def send_message_to_selected_rooms(self):
+		"""
+		Function that sends messages to user selected rooms
+		User types in rooms to send message to
+		Calls server function that returns a list of rooms to which message was sent, and not sent
+		"""
+
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input rooms they want to send message to
+		room_names = input("Please enter room names (separated by space): ")
+		if self.validate_user_input(room_names) != True:
+			return
+
+		#Create list from a string
+		room_names = room_names.split()
+
+		#Prompt user to input message they want to send
+		message = input("Please enter message you'd like to send: ")
+		if self.validate_user_input(message) != True:
+			return
+
+		#Get server response: No need to do after check, errors will be displayed as failed messages
+		response = self.send_request_to_server(14, [self._current_user, room_names, message])
+
+		if len(response[0]) > 0:
+			print("Message was successfuly sent to: " + '[%s]' % ', '.join(map(str, response[0])))
+
+		if len(response[1]) > 0:
+			print("Message FAILED to be sent to: " + '[%s]' % ', '.join(map(str, response[1])))
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#

@@ -239,6 +239,16 @@ class Server():
 				print(addr + " | send_all_room_message | ERROR")
 				return
 
+		if(request[0] == 14): 
+			try:
+				print(addr + " | send_message_to_selected_rooms : " + str(request[1]))
+				result = self.send_message_to_selected_rooms(request[1][0], request[1][1], request[1][2])
+				print(addr + " | send_message_to_selected_rooms | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
 		if(request[0] == 666): 
 			return 1
 
@@ -593,6 +603,38 @@ class Server():
 			sent_to.append(room_name)
 
 		return sent_to
+
+	def send_message_to_selected_rooms(self, username, room_names, message):
+		"""
+		Function that sends a message from a user to a list of rooms which have been specified
+
+		Args: 
+			username 	(String) - username of the user that wants to send the message
+			room_names 	(List) 	 - room names to which message should be sent
+			message 	(String) - message that needs to be sent to the rooms
+		"""
+
+		sent_to = []
+		failed = []
+
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in room_names:
+			before_check = self.before_check(check_room_name=True, check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+			if before_check != True:
+				failed.append(room_name)
+			else:
+				room = self._find_room(room_name)
+				time = datetime.datetime.now()
+				final_message = {"At": time, "From": username, "Message": message}
+				room._messages.append(final_message)
+				sent_to.append(room_name)
+
+		return [sent_to, failed]
 					
 
 	##############################################################################################

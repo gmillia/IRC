@@ -34,7 +34,8 @@ Final project for CS494 - Internet Relay Chat (Socket programming done on Python
 13. `Send personal message`
 14. `View personal inbox`
 15. `Send message to all rooms`
-16. `Exit`
+16. `Send message to selected rooms`
+17. `Exit`
 
 ---
 

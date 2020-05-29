@@ -169,7 +169,15 @@ Simply run: `python3 main.py`
 - When client isn't logged-in into some user account.
 ---
 
-### 16. Exit
+### 16. Send message to selected rooms
+**Purpose**: Let user send message to rooms which they choose to send message to
+
+**Errors**:
+- When client isn't connected to a server.
+- When client isn't logged-in into some user account.
+---
+
+### 17. Exit
 **Purpose**: Let client exist the program (and close connection with a server)
 
 **NOTE**: If server instance isn't closed, and during current session client made a user account 
