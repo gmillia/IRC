@@ -174,7 +174,7 @@ class Client():
 			return
 
 		#Send request to the server to create new user on the system
-		response = self.send_request_to_server(1, [username, password])
+		response = self.send_request_to_server("create_new_user", [username, password])
 
 		if self.after_check(response) != True:
 			return
@@ -205,7 +205,7 @@ class Client():
 			return
 
 		#Send request to server to log user in
-		response = self.send_request_to_server(2, [username, password])
+		response = self.send_request_to_server("login", [username, password])
 
 		if self.after_check(response) != True:
 			return
@@ -249,7 +249,7 @@ class Client():
 			return
 
 		#Send request to server to create new room
-		response = self.send_request_to_server(3, [room_name, self._current_user])
+		response = self.send_request_to_server("create_new_room", [room_name, self._current_user])
 
 		if self.after_check(response) != True:
 			return
@@ -272,7 +272,7 @@ class Client():
 			return
 
 		#Send a request to a server to fetch all room names
-		response = self.send_request_to_server(4, [self._current_user, self._current_room])
+		response = self.send_request_to_server("list_all_rooms", [self._current_user, self._current_room])
 
 		#Check for errored request
 		if response == None: return
@@ -311,7 +311,7 @@ class Client():
 			return
 
 		#Send request to server to join new room
-		response = self.send_request_to_server(5, [room_name, self._current_user])
+		response = self.send_request_to_server("join_new_room", [room_name, self._current_user])
 
 		if self.after_check(response) != True:
 			return
@@ -332,7 +332,7 @@ class Client():
 			return
 
 		#Send a request to a server for user to leave current room
-		response = self.send_request_to_server(6, [self._current_room, self._current_user])
+		response = self.send_request_to_server("leave_room", [self._current_room, self._current_user])
 
 		if self.after_check(response) != True:
 			return
@@ -359,7 +359,7 @@ class Client():
 			return
 
 		#Send request to a server to switch current room
-		response = self.send_request_to_server(7, [self._current_user, new_room])
+		response = self.send_request_to_server("switch_room", [self._current_user, new_room])
 
 		if self.after_check(response) != True:
 			return
@@ -386,7 +386,7 @@ class Client():
 			return
 
 		#Send request to server to send a message to a room
-		response = self.send_request_to_server(8, [self._current_user, self._current_room, message])
+		response = self.send_request_to_server("send_room_message", [self._current_user, self._current_room, message])
 
 		if self.after_check(response) != True:
 			return
@@ -406,7 +406,7 @@ class Client():
 			return
 
 		#Send request to server to fetch all messaged from current room
-		response = self.send_request_to_server(9, [self._current_user, self._current_room])
+		response = self.send_request_to_server("view_room_messages", [self._current_user, self._current_room])
 
 		if self.after_check(response) != True:
 			return
@@ -435,7 +435,7 @@ class Client():
 			return
 
 		#Send request to server to fetch all messaged from current room
-		response = self.send_request_to_server(10, [self._current_user, self._current_room])
+		response = self.send_request_to_server("view_room_members", [self._current_user, self._current_room])
 
 		if self.after_check(response) != True:
 			return
@@ -470,7 +470,7 @@ class Client():
 			return
 
 		#Attempt sending message
-		response = self.send_request_to_server(11, [self._current_user, recipient, message])
+		response = self.send_request_to_server("send_personal_message", [self._current_user, recipient, message])
 
 		if self.after_check(response) != True:
 			return
@@ -490,7 +490,7 @@ class Client():
 			return
 
 		#Get server response
-		response = self.send_request_to_server(12, [self._current_user])
+		response = self.send_request_to_server("view_personal_inbox", [self._current_user])
 
 		if self.after_check(response) != True:
 			return
@@ -521,7 +521,7 @@ class Client():
 			return
 
 		#Get server response
-		response = self.send_request_to_server(13, [self._current_user, message])
+		response = self.send_request_to_server("send_all_room_message", [self._current_user, message])
 
 		if self.after_check(response) != True:
 			return
@@ -553,7 +553,7 @@ class Client():
 			return
 
 		#Get server response: No need to do after check, errors will be displayed as failed messages
-		response = self.send_request_to_server(14, [self._current_user, room_names, message])
+		response = self.send_request_to_server("send_message_to_selected_rooms", [self._current_user, room_names, message])
 
 		if len(response[0]) > 0:
 			print("Message was successfuly sent to: " + '[%s]' % ', '.join(map(str, response[0])))
@@ -582,7 +582,7 @@ class Client():
 		room_names = [x.strip() for x in room_names.split(',')]
 
 		#Get server response: No need to do after check, errors will be displayed as failed joins
-		response = self.send_request_to_server(15, [self._current_user, room_names])
+		response = self.send_request_to_server("join_selected_rooms", [self._current_user, room_names])
 
 		if len(response[0]) > 0:
 			print("Successfuly joined: " + '[%s]' % ', '.join(map(str, response[0])))

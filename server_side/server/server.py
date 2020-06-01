@@ -109,7 +109,7 @@ class Server():
 
 		addr = address[0] + ":" + str(address[1])
 
-		if(request[0] == 1): 
+		if(request[0] == "create_new_user"): 
 			try:
 				print(addr + " | create_new_user | " + " username: " + str(request[1][0]) + " | password: " + str(request[1][1]))
 				result = self.create_new_user(request[1][0], request[1][1])
@@ -119,7 +119,7 @@ class Server():
 				print(addr + " | create_new_user | ERROR")
 				return
 
-		if(request[0] == 2): 
+		if(request[0] == "login"): 
 			try:
 				print(addr + " | login | " + str(request[1]))
 				result = self.login(request[1][0], request[1][1])
@@ -129,7 +129,7 @@ class Server():
 				print(addr + " | login | ERROR")
 				return
 
-		if(request[0] == 3): 
+		if(request[0] == "create_new_room"): 
 			try:
 				print(addr + " | create_new_room : " + str(request[1]))
 				result = self.create_new_room(request[1][0], request[1][1])
@@ -139,7 +139,7 @@ class Server():
 				print(addr + " | create_new_room | ERROR")
 				return
 
-		if(request[0] == 4): 
+		if(request[0] == "list_all_rooms"): 
 			try:
 				print(addr + " | list_all_rooms : " + str(request[1]))
 				result = self.list_all_rooms(request[1][0], request[1][1])
@@ -149,7 +149,7 @@ class Server():
 				print(addr + " | list_all_rooms | ERROR")
 				return
 
-		if(request[0] == 5): 
+		if(request[0] == "join_new_room"): 
 			try:
 				print(addr + " | join_new_room : " + str(request[1]))
 				result = self.join_new_room(request[1][0], request[1][1])
@@ -159,7 +159,7 @@ class Server():
 				print(addr + " | join_new_room | ERROR")
 				return
 
-		if(request[0] == 6): 
+		if(request[0] == "leave_room"): 
 			try:
 				print(addr + " | leave_room : " + str(request[1]))
 				result = self.leave_room(request[1][0], request[1][1])
@@ -169,7 +169,7 @@ class Server():
 				print(addr + " | leave_room | ERROR")
 				return
 
-		if(request[0] == 7):
+		if(request[0] == "switch_room"):
 			try:
 				print(addr + " | switch_room : " + str(request[1]))
 				result = self.switch_room(request[1][0], request[1][1])
@@ -179,7 +179,7 @@ class Server():
 				print(addr + " | switch_room | ERROR")
 				return
 
-		if(request[0] == 8): 
+		if(request[0] == "send_room_message"): 
 			try:
 				print(addr + " | send_room_message : " + str(request[1]))
 				result = self.send_room_message(request[1][0], request[1][1], request[1][2])
@@ -189,7 +189,7 @@ class Server():
 				print(addr + " | send_room_message | ERROR")
 				return
 
-		if(request[0] == 9): 
+		if(request[0] == "view_room_messages"): 
 			try:
 				print(addr + " | view_room_messages : " + str(request[1]))
 				result = self.view_room_messages(request[1][0], request[1][1])
@@ -199,7 +199,7 @@ class Server():
 				print(addr + " | view_room_messages | ERROR")
 				return
 
-		if(request[0] == 10): 
+		if(request[0] == "view_room_members"): 
 			try:
 				print(addr + " | view_room_members : " + str(request[1]))
 				result = self.view_room_members(request[1][0], request[1][1])
@@ -209,7 +209,7 @@ class Server():
 				print(addr + " | view_room_members | ERROR")
 				return
 
-		if(request[0] == 11): 
+		if(request[0] == "send_personal_message"): 
 			try:
 				print(addr + " | _send_personal_message : " + str(request[1]))
 				result = self.send_personal_message(request[1][0], request[1][1], request[1][2])
@@ -219,7 +219,7 @@ class Server():
 				print(addr + " | send_personal_message | ERROR")
 				return
 
-		if(request[0] == 12): 
+		if(request[0] == "view_personal_inbox"): 
 			try:
 				print(addr + " | view_personal_inbox : " + str(request[1]))
 				result = self.view_personal_inbox(request[1][0])
@@ -229,7 +229,7 @@ class Server():
 				print(addr + " | view_personal_inbox | ERROR")
 				return
 
-		if(request[0] == 13): 
+		if(request[0] == "send_all_room_message"): 
 			try:
 				print(addr + " | send_all_room_message : " + str(request[1]))
 				result = self.send_all_room_message(request[1][0], request[1][1])
@@ -239,7 +239,7 @@ class Server():
 				print(addr + " | send_all_room_message | ERROR")
 				return
 
-		if(request[0] == 14): 
+		if(request[0] == "send_message_to_selected_rooms"): 
 			try:
 				print(addr + " | send_message_to_selected_rooms : " + str(request[1]))
 				result = self.send_message_to_selected_rooms(request[1][0], request[1][1], request[1][2])
@@ -249,7 +249,7 @@ class Server():
 				print(addr + " | send_all_room_message | ERROR")
 				return
 
-		if(request[0] == 15): 
+		if(request[0] == "join_selected_rooms"): 
 			try:
 				print(addr + " | join_selected_rooms : " + str(request[1]))
 				result = self.join_selected_rooms(request[1][0], request[1][1])
