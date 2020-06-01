@@ -16,6 +16,8 @@ class Server():
 		self._host = '127.0.0.1'
 		self._port = 4444
 
+		self._max_clients = 100
+
 		self._threads = 0
 		self._users = []
 		self._usernames = []
@@ -24,6 +26,12 @@ class Server():
 		self._room_names = []
 
 	def start(self):
+		"""
+		Main function that starts the server and listens for new connections from the user. 
+		Upon new connection, starts new thread (to be able to handle multiple client connections).
+		At the moment shutsdown upon user interrupt (ctrl+c)
+		"""
+		#Start server
 		try: 
 			self._server_socket.bind((self._host, self._port))
 		except socket.error as e:
@@ -31,8 +39,11 @@ class Server():
 
 		print("Press Ctrl+C to shutdown.")
 		print("Waiting for a connection...")
-		self._server_socket.listen(5)
 
+		#Accept new connections until 100 user use service simultaneously.
+		self._server_socket.listen(self._max_clients)
+
+		#Upon each new connection start new thread
 		try:
 			while True:
 				Client, address = self._server_socket.accept()
@@ -50,8 +61,14 @@ class Server():
 		self._server_socket.close()
 
 	def threaded_client(self, connection, address):
+		"""
+		Helper function that actually handles individual client
+		"""
+
+		#Initially send user greeting
 		connection.send(str.encode("Welcome to the Server.\n"))
 
+		#Keep communicating (receiving/sending) while connection is established with the client
 		while True:
 			data = connection.recv(2048)
 			#Check if data is empty or client closed the connection
@@ -60,8 +77,9 @@ class Server():
 				connection.close()
 				return
 
-			#Send response on user request
+			#Get user request
 			request = eval(data.decode('utf-8'))
+
 			#All helper functions return a list as a response. If lsit isn't returned - means there is an error
 			response = self._request_handler(request, address)
 			if type(response) != list:
@@ -69,6 +87,7 @@ class Server():
 			else:
 				response = str(response)
 
+			#Send response to client request
 			try:
 				connection.sendall(response.encode())
 			except OSError:
@@ -78,11 +97,14 @@ class Server():
 
 	def _request_handler(self, request, address):
 		"""
-		request is a list
-		request [0] = act to be performed
-		request [1] = data that is needed to perform act
+		Helper function that handles user requests based on the code user sent.
 
-		description of the act flags can be found in docs
+		Args:
+			request 	(List) - [0] contains request code, [1] contains request details
+			address  	(List) - specifies full IP address of user who made request
+
+		Returns:
+			(List) - contains either information, OK (successful operation), or error message
 		"""
 
 		addr = address[0] + ":" + str(address[1])
@@ -207,6 +229,36 @@ class Server():
 				print(addr + " | view_personal_inbox | ERROR")
 				return
 
+		if(request[0] == 13): 
+			try:
+				print(addr + " | send_all_room_message : " + str(request[1]))
+				result = self.send_all_room_message(request[1][0], request[1][1])
+				print(addr + " | send_all_room_message | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
+		if(request[0] == 14): 
+			try:
+				print(addr + " | send_message_to_selected_rooms : " + str(request[1]))
+				result = self.send_message_to_selected_rooms(request[1][0], request[1][1], request[1][2])
+				print(addr + " | send_message_to_selected_rooms | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
+		if(request[0] == 15): 
+			try:
+				print(addr + " | join_selected_rooms : " + str(request[1]))
+				result = self.join_selected_rooms(request[1][0], request[1][1])
+				print(addr + " | join_selected_rooms | result | " + str(result))
+				return result
+			except:
+				print(addr + " | send_all_room_message | ERROR")
+				return
+
 		if(request[0] == 666): 
 			return 1
 
@@ -252,7 +304,7 @@ class Server():
 		#Match user and password
 		user = self._find_user(username)
 		if user._password != password:
-			return [0]
+			return [{"description": "ERROR: Invalid username or password."}]
 
 		#All checks passed: return room last used by the user
 		return [user._last_room]
@@ -262,8 +314,8 @@ class Server():
 		Function that creates new room on the system
 
 		Args:
-			room_name (String) - name of the room to be created
-			owner (String) - username of the user that wants to create new room
+			room_name 	(String) - name of the room to be created
+			owner 		(String) - username of the user that wants to create new room
 
 		Returns (one of the following):
 			[OK] - successful room creation
@@ -293,8 +345,8 @@ class Server():
 		Function that returns all rooms existing on the system
 
 		Args:
-			username (String) - username of the user that wants to fetch all rooms
-			current_room (String) - room currently used by the user that wants to fetch all rooms
+			username 		(String) - username of the user that wants to fetch all rooms
+			current_room 	(String) - room currently used by the user that wants to fetch all rooms
 
 		Returns (one of the following):
 			[last_room, room_names] - last_room = room last used by the user, room_names = list of rooms that exist on the system
@@ -318,8 +370,8 @@ class Server():
 		Function that lets user join new room
 
 		Args:
-			room_name (String) - name of the server that user wants to join
-			username (String) - username of the user that wants to join new room
+			room_name 	(String) - name of the server that user wants to join
+			username 	(String) - username of the user that wants to join new room
 
 		Returns (one of the following):
 			[OK] - successful join
@@ -346,8 +398,8 @@ class Server():
 		Function that lets user to leave room
 
 		Args:
-			room_name (String) - name of the room user wants to leave
-			username (String) - username of the user that wants to leave room
+			room_name 	(String) - name of the room user wants to leave
+			username 	(String) - username of the user that wants to leave room
 
 		Returns:
 			[OK] - successful leaving
@@ -380,17 +432,18 @@ class Server():
 
 	def switch_room(self, username, room_name):
 		"""
-		Function that lets user switch from one room to another room
+		Function that lets user switch from one room to another room.
+		User must be a participant of the room he wants to switch to.
 
 		Args: 
-			username (String) - username of the user that wants to switch rooms
-			room_name (String) - name of the room that user wants to switch to
+			username 	(String) - username of the user that wants to switch rooms
+			room_name 	(String) - name of the room that user wants to switch to
 
 		Returns (one of the following): 
 			[OK] - successfuly switched room
 		"""
 
-		before_check = self.before_check(check_username=True, check_room_name=True, check_user_not_in_room=True, check_room_not_in_user=True, 
+		before_check = self.before_check(check_username=True, check_room_name=True, check_user_in_room=True, check_room_in_user=True, 
 			username=username, room_name=room_name)
 		if before_check != True:
 			return before_check
@@ -407,9 +460,9 @@ class Server():
 		Function that sends a rooms message: appends message list in room object
 
 		Args: 
-			username (String) - username of the user trying to send message
-			room_name (String) - name of the room user is trying to send message to
-			message (String) - message user is trying to send to a room
+			username 	(String) - username of the user trying to send message
+			room_name 	(String) - name of the room user is trying to send message to
+			message 	(String) - message user is trying to send to a room
 
 		Returns: 
 			[OK] - message successfuly sent
@@ -438,8 +491,8 @@ class Server():
 		Function that returns room messages to the user who requested to view room messages
 
 		Args: 
-			username (String) - username of the user that wants to switch rooms
-			room_name (String) - name of the room that user wants to switch to
+			username 	(String) - username of the user that wants to switch rooms
+			room_name 	(String) - name of the room that user wants to switch to
 
 		Returns (one of the following):
 			[room_messages] - list of room messages
@@ -462,8 +515,8 @@ class Server():
 		Function that returns room messages to the user who requested to view room messages
 
 		Args: 
-			username (String) - username of the user that wants to switch rooms
-			room_name (String) - name of the room that user wants to switch to
+			username 	(String) - username of the user that wants to switch rooms
+			room_name 	(String) - name of the room that user wants to switch to
 
 		Returns:
 			[room_members] - list of room members
@@ -494,7 +547,12 @@ class Server():
 			[OK] - successful message sent
 		"""
 
-		#Check for rcipient
+		#Check for sender
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		#Check for recipient
 		before_check = self.before_check(check_username=True, username=recipient)
 		if before_check != True:
 			return before_check
@@ -527,6 +585,108 @@ class Server():
 		user = self._find_user(username)
 
 		return user._inbox
+
+	def send_all_room_message(self, username, message):
+		"""
+		Function puts a user message into all rooms that user is a participant of
+
+		Args: 
+			username 	(String) - username of the user that wants to send the message
+			message 	(String) - message user wants to send to all the rooms
+
+		Returns:
+			["OK"] - successful message sent
+		"""
+
+		sent_to = []
+
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in user._room_names:
+			before_check = self.before_check(check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+			if before_check != True:
+				return before_check
+
+			room = self._find_room(room_name)
+			time = datetime.datetime.now()
+			final_message = {"At": time, "From": username, "Message": message}
+			room._messages.append(final_message)
+			sent_to.append(room_name)
+
+		return sent_to
+
+	def send_message_to_selected_rooms(self, username, room_names, message):
+		"""
+		Function that sends a message from a user to a list of rooms which have been specified
+
+		Args: 
+			username 	(String) - username of the user that wants to send the message
+			room_names 	(List) 	 - room names to which message should be sent
+			message 	(String) - message that needs to be sent to the rooms
+
+		Retuns:
+			sent_to 	(List) - names of the rooms to which message was successfuly sent
+			failed 		(List) - names of the rooms to which message failed to be sent
+		"""
+
+		sent_to = []
+		failed = []
+
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in room_names:
+			before_check = self.before_check(check_room_name=True, check_user_in_room=True, check_room_in_user=True, username=username, room_name=room_name)
+			if before_check != True:
+				failed.append(room_name)
+			else:
+				room = self._find_room(room_name)
+				time = datetime.datetime.now()
+				final_message = {"At": time, "From": username, "Message": message}
+				room._messages.append(final_message)
+				sent_to.append(room_name)
+
+		return [sent_to, failed]
+
+	def join_selected_rooms(self, username, room_names):
+		"""
+		Function that lets user join multiple rooms
+
+		Args:
+			username 	(String) - username of the user that wants to join rooms
+			room_names 	(List)   - names of the rooms user is attemptin to join
+
+		Returns:
+			joined 	(List) - names of the rooms that user successfuly joined
+			failed 	(List) - names of the rooms user failed to join
+		"""
+
+		joined = []
+		failed = []
+		
+		before_check = self.before_check(check_username=True, username=username)
+		if before_check != True:
+			return before_check
+
+		user = self._find_user(username)
+
+		for room_name in room_names:
+			result = self.join_new_room(room_name, username)
+
+			if result[0] == "OK":
+				joined.append(room_name)
+			else:
+				failed.append(room_name)
+
+		user._last_room = joined[-1]  # update last user room
+		return [joined, failed]	
 
 	##############################################################################################
 	#HELPER FUNCTIONS############################################################HELPER FUNCTIONS#
@@ -563,15 +723,19 @@ class Server():
 		check_room_in_user=False, check_user_not_in_room=False, check_room_not_in_user=False, username=None, room_name=None):
 		"""
 		Helper function that provides a centralized error system
-		Performs checks and returns either a number that corresponds to certain error, or True if all checks pass
+		Performs checks and returns either an error or True (signifies successful pass of all tests)
 
 		Args:
-			check_username 				(Boolean) - specifies whether to check if user with username exists on system
-			check_user_already_exists 	(Boolean) - specifies whether to check if user with username already exists on the system (for new user registration)
-			check_room_name 			(Boolean) - specifies whether to check if room with room_name exists on the system
-			check_room_already_exists 	(Boolean) - specifies whether to check if room with room_name already exists on the system (for new room registration)
-			check_user_in_room 			(Boolean) - specifies whether to check if room has a user with a given username
-			check_room_in_user 			(Boolean) - specifies whether to check if user has a room with a given room_name
+			check_username 				(Boolean) 		- specifies whether to check if user with username EVEN exists on system
+			check_user_already_exists 	(Boolean) 		- specifies whether to check if user with username ALREADY exists on the system (for new user registration)
+			check_room_name 			(Boolean) 		- specifies whether to check if room with room_name EVEN exists on the system
+			check_room_already_exists 	(Boolean) 		- specifies whether to check if room with room_name ALREADY exists on the system (for new room registration)
+			check_user_in_room 			(Boolean) 		- specifies whether to check if room with room_name EVEN has a user with a given username
+			check_room_in_user 			(Boolean) 		- specifies whether to check if user with username EVEN has a room with a given room_name
+			check_user_not_in_room 		(Boolean) 		- specifies whether to check if room with room_name ALREADY has user with username as a participant
+			check_room_not_in_user 		(Boolean) 		- specifies whether to check if user with username ALREADY participates in a room with room_name
+			username 					(String/None) 	- username of the user checks will be performed for
+			room_name  					(String/None) 	- room name of the room checks will be performed for
 		"""
 
 		#Check username
@@ -613,6 +777,7 @@ class Server():
 			if username in room._usernames:
 				return [{"description": "ERROR: " + room_name + " already has " + username + " as a participant."}]
 
+		#Check room not in user
 		if check_room_not_in_user:
 			user = self._find_user(username)
 			if room_name in user._room_names:

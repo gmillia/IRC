@@ -24,7 +24,7 @@ class Client():
 			_Option("Connect to a server.", self.attempt_connect_to_server),
 			_Option("Disconnect from a server.", self.disconnect_from_server),
 			_Option("Create new user.", self.create_new_user),
-			_Option("Login to existing account.", self.login),
+			_Option("Login to an existing account.", self.login),
 			_Option("Logout", self.logout),
 			_Option("Create new room.", self.create_new_room),
 			_Option("List all rooms.", self.list_all_rooms),
@@ -36,6 +36,9 @@ class Client():
 			_Option("View room members", self.view_room_members),
 			_Option("Send personal message", self.send_personal_message),
 			_Option("View personal inbox", self.view_personal_inbox),
+			_Option("Send message to all rooms", self.send_all_room_message),
+			_Option("Send message to selected rooms", self.send_message_to_selected_rooms),
+			_Option("Join selected rooms", self.join_selected_rooms),
 			_Option("Exit.", lambda: "Exit")
 		]
 
@@ -54,9 +57,9 @@ class Client():
 			else:
 				msg = " ".join([str(title), "[User: " + self._current_user + " | Room: " + str(self._current_room) + "] choose what you'd like to do:"])
 
-			print()
+			print("---------------------------------------------")
 			print(msg)
-			print()
+			print("---------------------------------------------")
 			print()
 			for i in range(len(options)):
 				print(str(i) + ": " + options[i].msg)
@@ -69,7 +72,7 @@ class Client():
 				option = 0
 
 			if options[option].func_pointer() == "Exit":
-				self.disconnect_from_server()
+				self.disconnect_from_server(exit=True)
 				should_exit = True
 
 	def _get_menu_option(self, min_value, max_value, cli_symbol="> "):
@@ -133,14 +136,17 @@ class Client():
 		response = data.decode('utf-8')
 		print(response)
 
-	def disconnect_from_server(self):
-		if self._client_socket != None: 
-			self._client_socket.close()
+	def disconnect_from_server(self, exit=False):
+		if self._connected == True or self._client_socket != None or exit == True: 
+			if self._client_socket != None:
+				self._client_socket.close()
 			self._client_socket = None
 			self._connected = False
 			self._current_user = None
 			self._current_room = None
 			print("Disconnected from the server.")
+		else:
+			print("ERROR: connect to the server first.")
 
 	##############################################################################################
 	#MENU HELPERS####################################################################MENU HELPERS#
@@ -154,7 +160,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
+		if self.before_check(connected=True, logged_out=True) != True: 
 			return
 
 		#Prompt user for input
@@ -185,16 +191,16 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=False, logged_out=True, have_room=False) != True: 
+		if self.before_check(connected=True, logged_out=True) != True: 
 			return
 
 		#Prompt user for input
-		username = input("Enter new user username: ")
+		username = input("Enter username: ")
 		#Validate user input
 		if self.validate_user_input(username) != True:
 			return
 
-		password = input("Enter new user password: ")
+		password = input("Enter password: ")
 		if self.validate_user_input(password) != True:
 			return
 
@@ -216,7 +222,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#All checks passed: can log user out: clear local info
@@ -233,7 +239,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to input name of the room to create
@@ -262,7 +268,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Send a request to a server to fetch all room names
@@ -295,7 +301,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to enter name of the new room they want to join
@@ -322,7 +328,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send a request to a server for user to leave current room
@@ -343,7 +349,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user to input name of the room they want to switch to
@@ -370,7 +376,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Prompt user to input a message to be sent to a room
@@ -396,7 +402,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -425,7 +431,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=True) != True: 
+		if self.before_check(connected=True, logged_in=True, have_room=True) != True: 
 			return
 
 		#Send request to server to fetch all messaged from current room
@@ -450,7 +456,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Prompt user input for recipient name
@@ -480,7 +486,7 @@ class Client():
 		"""
 
 		#Perform before check
-		if self.before_check(connected=True, logged_in=True, logged_out=False, have_room=False) != True: 
+		if self.before_check(connected=True, logged_in=True) != True: 
 			return
 
 		#Get server response
@@ -499,6 +505,93 @@ class Client():
 			print(response[i]["At"], " | ", response[i]["From"], " | ", response[i]["Message"])
 
 		print("**************************************************************")
+
+	def send_all_room_message(self):
+		"""
+		Function sends message to all rooms that user participates in.
+		Fetches all users rooms, and sends message to each one
+		"""
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input message they want to send
+		message = input("Please enter message you'd like to send: ")
+		if self.validate_user_input(message) != True:
+			return
+
+		#Get server response
+		response = self.send_request_to_server(13, [self._current_user, message])
+
+		if self.after_check(response) != True:
+			return
+
+		print("Message was sent to: " + '[%s]' % ', '.join(map(str, response)))
+
+	def send_message_to_selected_rooms(self):
+		"""
+		Function that sends messages to user selected rooms
+		User types in rooms to send message to
+		Calls server function that returns a list of rooms to which message was sent, and not sent
+		"""
+
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input rooms they want to send message to
+		room_names = input("Please enter room names (separated by comma): ")
+		if self.validate_user_input(room_names) != True:
+			return
+
+		#Reformat to remove spaces between commas if any
+		room_names = [x.strip() for x in room_names.split(',')]
+
+		#Prompt user to input message they want to send
+		message = input("Please enter message you'd like to send: ")
+		if self.validate_user_input(message) != True:
+			return
+
+		#Get server response: No need to do after check, errors will be displayed as failed messages
+		response = self.send_request_to_server(14, [self._current_user, room_names, message])
+
+		if len(response[0]) > 0:
+			print("Message was successfuly sent to: " + '[%s]' % ', '.join(map(str, response[0])))
+
+		if len(response[1]) > 0:
+			print("Message FAILED to be sent to: " + '[%s]' % ', '.join(map(str, response[1])))
+
+	def join_selected_rooms(self):
+		"""
+		Function that lets user to join multiple selected rooms
+		Lets user type in room names of the rooms they want to join.
+		Calls server function that lets them join.
+		Server function returns a list of successfuly joined rooms, and failed rooms
+		"""
+
+		#Perform before check
+		if self.before_check(connected=True, logged_in=True) != True: 
+			return
+
+		#Prompt user to input rooms they want to send message to
+		room_names = input("Please enter room names (separated by comma): ")
+		if self.validate_user_input(room_names) != True:
+			return
+
+		#Reformat to remove spaces between commas if any
+		room_names = [x.strip() for x in room_names.split(',')]
+
+		#Get server response: No need to do after check, errors will be displayed as failed joins
+		response = self.send_request_to_server(15, [self._current_user, room_names])
+
+		if len(response[0]) > 0:
+			print("Successfuly joined: " + '[%s]' % ', '.join(map(str, response[0])))
+			#update current room to last joined one
+			self._current_room = response[0][-1]
+
+		if len(response[1]) > 0:
+			print("FAILED to join: " + '[%s]' % ', '.join(map(str, response[1])))
+
 
 	##############################################################################################
 	#MULTI USE FUNCTIONS######################################################MULTI USE FUNCTIONS#
@@ -545,7 +638,7 @@ class Client():
 		response = eval(data.decode('utf-8'))
 		return response
 
-	def before_check(self, connected=True, logged_in=True, logged_out=False, have_room=False):
+	def before_check(self, connected=False, logged_in=False, logged_out=False, have_room=False):
 		"""
 		Helper function that checks required checks before server side function can be called.
 		Not all functions need all checks, thus flags will specify which checks need to be performed
@@ -634,13 +727,6 @@ class Client():
 			True - all checks pass, no errors
 			None - displays error messages and returns None when errors are detected
 
-		Error Codes:
-			[0] - user with a given username doesn't exist on the system 
-			[1] - user with a given username already exists on the system
-			[2] - room with a given room_name doesn't exist on the system,
-			[3] - room with a given room_name already exists on the system
-			[4] - room doesn't have a user with a given username
-			[5] - user doesn't have (doesn't participate in) a room with a given room_name
 		"""
 		#None signifies some error while requesting occured
 		if response == None:
@@ -650,17 +736,24 @@ class Client():
 		if len(response) == 0:
 			return True
 
-		#Try to convert to int: int is returned only on success
+		if response[0] == None:
+				return True
+
+		#Try some checks
 		try:
 			r = str(response[0])
 			if r == "OK":
 				return True
 		except:
-			#Only error dict contains code as a key, check for that:
-			try:
-				e = response[0]["description"]
-			except:
-				return True
+			pass
+
+		#Only error dict contains code as a key, check for that:
+		try:
+			e = response[0]["description"]
+		except TypeError:
+			return True
+		except:
+			return True
 
 		#Response is an error. Display it
 		print(response[0]["description"])
